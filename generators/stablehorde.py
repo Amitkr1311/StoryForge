@@ -72,7 +72,6 @@ class StableHordeGenerator(BaseImageGenerator):
             try:
                 with urllib.request.urlopen(check_url, timeout=15) as resp:
                     status = json.loads(resp.read())
-                          f"wait={status.get('wait_time')}s queue={status.get('queue_position')}")
             except Exception as e:
                 continue
             if status.get("done"):

@@ -58,6 +58,7 @@ def segment_text(text: str, max_scenes: int = 5, backend: str = "auto", use_llm:
         try:
             return _llm_segment(text, max_scenes, api_key)
         except Exception as e:
+            pass
 
     # ── Fallback tokenisation backend ─────────────────────────────────────────
     if backend == "spacy" or (backend == "auto" and _SPACY_AVAILABLE):
