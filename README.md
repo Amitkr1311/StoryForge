@@ -63,7 +63,7 @@ This ensures the visual lighting tells a story even if the user's text is dry.
 
 ### 1. Clone & Environment
 ```bash
-git clone https://github.com/yourusername/storyforge.git
+git clone https://github.com/Amitkr1311/StoryForge.git
 cd storyforge
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate

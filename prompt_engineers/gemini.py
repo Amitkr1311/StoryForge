@@ -19,10 +19,8 @@ class GeminiPromptEngineer(BasePromptEngineer):
                 from google import genai
                 self._client = genai.Client(api_key=self.api_key)
             except ImportError:
-                print("[GeminiPromptEngineer] google-genai is missing.")
                 self.api_key = None  # graceful degradation
             except Exception as e:
-                print(f"[GeminiPromptEngineer] Initialization error: {e}")
                 self.api_key = None
 
     def enhance(self, sentence: str, global_context: str = "", scene_index: int = 0, total_scenes: int = 1) -> str:
@@ -34,7 +32,6 @@ class GeminiPromptEngineer(BasePromptEngineer):
             return self._llm_enhance(sentence, global_context, scene_index, total_scenes)
         except Exception as e:
             # Fall back to rule-based on any LLM failure
-            print(f"[GeminiPromptEngineer] LLM Error: {e}, falling back to rule-based.")
             traceback.print_exc()
             return self._fallback.enhance(sentence, global_context, scene_index, total_scenes)
 

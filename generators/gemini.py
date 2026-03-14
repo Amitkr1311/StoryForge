@@ -20,8 +20,6 @@ class GeminiGenerator(BaseImageGenerator):
 
     def generate(self, prompt: str, index: int = 0) -> dict:
         api_key = os.getenv("GEMINI_API_KEY", "")
-        print(f"\n[Gemini] Panel {index} — key present: {bool(api_key)}")
-        print(f"[Gemini] Prompt ({len(prompt)} chars): {prompt[:120]}...")
 
         if not api_key:
             raise ValueError(
@@ -36,7 +34,6 @@ class GeminiGenerator(BaseImageGenerator):
 
         client = genai.Client(api_key=api_key)
 
-        print(f"[Gemini] Sending request to {self._MODEL}...")
         response = client.models.generate_content(
             model=self._MODEL,
             contents=prompt,
@@ -62,7 +59,5 @@ class GeminiGenerator(BaseImageGenerator):
         if not image_bytes:
             raise ValueError(f"Gemini returned no image. Response: {response}")
 
-        print(f"[Gemini] Got {len(image_bytes)} bytes — saving...")
         local_path = self._save_image_bytes(image_bytes, suffix="png")
-        print(f"[Gemini] Saved to {local_path}")
         return {"url": local_path, "is_local": True}

@@ -58,7 +58,6 @@ def segment_text(text: str, max_scenes: int = 5, backend: str = "auto", use_llm:
         try:
             return _llm_segment(text, max_scenes, api_key)
         except Exception as e:
-            print(f"[Segmenter] LLM segmentation failed: {e}. Falling back to grammar splitting.")
 
     # ── Fallback tokenisation backend ─────────────────────────────────────────
     if backend == "spacy" or (backend == "auto" and _SPACY_AVAILABLE):

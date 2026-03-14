@@ -22,8 +22,6 @@ class HuggingFaceInferenceGenerator(BaseImageGenerator):
 
     def generate(self, prompt: str, index: int = 0) -> dict:
         hf_token = os.getenv("HF_TOKEN", "")
-        print(f"\n[HuggingFace] Panel {index} — token present: {bool(hf_token)}")
-        print(f"[HuggingFace] Prompt ({len(prompt)} chars): {prompt[:120]}...")
 
         if not hf_token:
             raise ValueError(
@@ -42,7 +40,6 @@ class HuggingFaceInferenceGenerator(BaseImageGenerator):
             "User-Agent":    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         }
 
-        print(f"[HuggingFace] POST {self._API_URL}")
         req = urllib.request.Request(self._API_URL, data=payload, headers=headers, method="POST")
 
         try:
@@ -50,16 +47,12 @@ class HuggingFaceInferenceGenerator(BaseImageGenerator):
                 image_bytes = resp.read()
         except urllib.error.HTTPError as exc:
             body = exc.read().decode(errors="replace")
-            print(f"[HuggingFace] HTTP {exc.code} — body: {body[:400]}")
             raise ValueError(f"HuggingFace API failed: HTTP {exc.code} — {body[:200]}") from exc
         except Exception as exc:
-            print(f"[HuggingFace] Error: {exc}")
             raise ValueError(f"HuggingFace API error: {exc}") from exc
 
         if len(image_bytes) < 1000:
             raise ValueError(f"HuggingFace returned too few bytes ({len(image_bytes)})")
 
-        print(f"[HuggingFace] Got {len(image_bytes)} bytes — saving...")
         local_path = self._save_image_bytes(image_bytes, suffix="png")
-        print(f"[HuggingFace] Saved to {local_path}")
         return {"url": local_path, "is_local": True}

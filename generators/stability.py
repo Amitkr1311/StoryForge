@@ -24,8 +24,6 @@ class StabilityGenerator(BaseImageGenerator):
 
     def generate(self, prompt: str, index: int = 0) -> dict:
         api_key = os.getenv("STABILITY_API_KEY", "")
-        print(f"\n[StabilityAI] Panel {index} — key present: {bool(api_key)}")
-        print(f"[StabilityAI] Prompt ({len(prompt)} chars): {prompt[:120]}...")
 
         if not api_key:
             raise ValueError(
@@ -55,7 +53,6 @@ class StabilityGenerator(BaseImageGenerator):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         }
 
-        print(f"[StabilityAI] POST {self._API_URL}")
         req = urllib.request.Request(self._API_URL, data=body, headers=headers, method="POST")
 
         try:
@@ -63,10 +60,8 @@ class StabilityGenerator(BaseImageGenerator):
                 result = json.loads(resp.read())
         except urllib.error.HTTPError as exc:
             err_body = exc.read().decode(errors="replace")
-            print(f"[StabilityAI] HTTP {exc.code} — body: {err_body[:400]}")
             raise ValueError(f"Stability AI failed: HTTP {exc.code} — {err_body[:200]}") from exc
         except Exception as exc:
-            print(f"[StabilityAI] Error: {exc}")
             raise ValueError(f"Stability AI error: {exc}") from exc
 
         # Response contains base64-encoded image
@@ -75,7 +70,5 @@ class StabilityGenerator(BaseImageGenerator):
             raise ValueError(f"Stability AI returned no image: {result}")
 
         image_bytes = base64.b64decode(image_b64)
-        print(f"[StabilityAI] Got {len(image_bytes)} bytes — saving...")
         local_path = self._save_image_bytes(image_bytes, suffix="png")
-        print(f"[StabilityAI] Saved to {local_path}")
         return {"url": local_path, "is_local": True}
