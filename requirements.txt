@@ -1,0 +1,26 @@
+# ── Web Framework ─────────────────────────────
+flask>=3.0.0
+python-dotenv>=1.0.0
+
+# ── NLP ───────────────────────────────────────
+nltk>=3.8.1
+# spacy>=3.7.0           # Optional: uncomment for spaCy backend
+# en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
+
+# ── Image Generation (choose one or more) ─────
+
+# OpenAI DALL·E 3
+openai>=1.30.0
+
+# Stability AI (uses requests, already a Flask dep)
+requests>=2.31.0
+
+# HuggingFace local inference (large install — ~4 GB model download on first run)
+# diffusers>=0.27.0
+# transformers>=4.40.0
+# torch>=2.2.0
+# accelerate>=0.29.0
+# Pillow>=10.3.0
+
+# ── Optional: LLM prompt enhancement ──────────
+# (Already covered by openai package above)

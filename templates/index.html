@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Storyboard StoryForge V2.0</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e7390d",
+                        "background-light": "#f7f4ee",
+                        "background-dark": "#111111",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "bebas": ["Bebas Neue", "sans-serif"],
+                        "playfair": ["Playfair Display", "serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    borderWidth: {
+                        '3': '3px',
+                        '4': '4px',
+                    },
+                    borderRadius: {
+                        "none": "0px",
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "9999px",
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .vertical-text { writing-mode: vertical-rl; transform: rotate(180deg); }
+        .peer:focus-visible ~ div { outline: 2px solid #e7390d; outline-offset: 2px; }
+    </style>
+</head>
+<body class="bg-background-light font-display text-slate-900 antialiased overflow-x-hidden">
+<div class="flex flex-col lg:flex-row min-h-screen">
+
+    <!-- Left Column (Form, ~55% width) -->
+    <main class="w-full lg:w-[55%] p-8 lg:p-16 flex flex-col gap-8 bg-background-light">
+        <header class="flex flex-col gap-6">
+            <div class="tracking-[3px] font-mono text-[10px] text-slate-900 font-bold">
+                PITCH VISUALIZER / V2.0
+            </div>
+            <h1 class="font-bebas text-7xl lg:text-[84px] leading-[0.9] text-slate-900 uppercase">
+                TURN<br/>WORDS<br/>INTO<br/>SCENES.
+            </h1>
+            <div class="w-24 h-1 bg-primary"></div>
+        </header>
+
+        {% if error %}
+        <div class="flex items-center gap-3 p-4 border-2 border-primary bg-primary/10 text-primary font-mono text-sm font-bold uppercase mt-4 shadow-[4px_4px_0px_0px_rgba(231,57,13,0.3)]">
+            <span class="material-symbols-outlined text-xl">warning</span>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/generate" id="pitch-form" class="flex flex-col gap-8 mt-4">
+            
+            <!-- Textarea Section -->
+            <div class="flex flex-col gap-2">
+                <textarea 
+                    name="text" 
+                    id="pitch-text"
+                    required
+                    class="w-full h-48 bg-transparent border-3 border-slate-900 p-6 font-playfair italic text-xl focus:ring-0 focus:border-primary placeholder:text-slate-400" 
+                    placeholder="Paste your pitch narrative here..."
+                ></textarea>
+                <div class="flex justify-between items-center px-1">
+                    <button type="button" onclick="loadSample()" class="font-mono text-[10px] font-bold text-slate-500 hover:text-primary uppercase flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[12px]">auto_awesome</span> Use Sample Lengthy Pitch
+                    </button>
+                    <span class="font-mono text-[10px] text-slate-400 font-bold tracking-wider"><span id="char-count">0</span> / 3000 CHARS</span>
+                </div>
+            </div>
+
+            <!-- Visual Style Selector -->
+            <div class="flex flex-col gap-3">
+                <span class="font-mono text-[11px] font-bold text-primary tracking-wider uppercase">Visual Style</span>
+                <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                    {% for s in styles %}
+                    <label class="cursor-pointer shrink-0">
+                        <input type="radio" name="style" value="{{ s.id }}" class="peer sr-only" {% if loop.first %}checked{% endif %}>
+                        <div class="px-6 py-2 bg-white text-slate-900 border-2 border-slate-900 font-mono text-xs font-bold uppercase hover:bg-slate-100 peer-checked:bg-slate-900 peer-checked:text-white transition-colors">
+                            {{ s.label }}
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Provider Row -->
+            <div class="flex flex-col gap-3">
+                <span class="font-mono text-[11px] font-bold text-primary tracking-wider uppercase">Image Engine <span class="text-slate-400 font-normal lowercase">(Provider)</span></span>
+                <div class="flex flex-wrap gap-3">
+                    {% for p in providers %}
+                    <label class="cursor-pointer">
+                        <input type="radio" name="provider" value="{{ p.id }}" class="peer sr-only" {% if loop.first and p.available %}checked{% endif %} {% if not p.available %}disabled{% endif %}>
+                        <div class="px-6 py-2 font-mono text-xs font-bold uppercase border-2 border-slate-900 bg-white text-slate-900 peer-checked:bg-slate-900 peer-checked:text-white {% if not p.available %}opacity-50 !border-slate-300 !text-slate-400 line-through hover:!bg-white cursor-not-allowed{% else %}hover:bg-slate-100 transition-colors{% endif %}">
+                            {{ p.label }}
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Gemini Prompts Toggle -->
+            <label class="flex items-center gap-4 py-2 cursor-pointer group">
+                <input type="checkbox" name="llm_enhance" value="on" class="peer sr-only">
+                <div class="relative inline-block w-12 h-6 transition duration-300 ease-in-out bg-slate-300 peer-checked:bg-primary border-2 border-slate-900 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:w-4 after:h-4 after:bg-white after:border after:border-slate-900 after:transition-all peer-checked:after:translate-x-[22px]">
+                </div>
+                <span class="font-mono text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-primary transition-colors">SUPERCHARGE PROMPTS WITH GEMINI FLASH</span>
+            </label>
+
+            <!-- Submit Button -->
+            <button type="submit" id="submit-btn" class="w-full h-16 bg-primary border-4 border-slate-900 text-white font-bebas text-3xl flex items-center justify-center gap-4 hover:translate-x-1 hover:-translate-y-1 transition-transform shadow-[4px_4px_0px_0px_rgba(17,17,17,1)] active:shadow-none active:translate-x-0 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl">arrow_right_alt</span>
+            </button>
+        </form>
+    </main>
+
+    <!-- Right Column (Art/Manifesto, ~45% width) -->
+    <aside class="w-full lg:w-[45%] bg-background-dark min-h-[50vh] lg:min-h-screen relative flex flex-col justify-between overflow-hidden">
+        <!-- Rotated Background Watermark -->
+        <div class="absolute -left-12 top-1/2 -translate-y-1/2 select-none opacity-20 pointer-events-none">
+            <h2 class="font-bebas text-[160px] text-white vertical-text tracking-widest leading-none">
+                STORYBOARD
+            </h2>
+        </div>
+
+        <!-- Content Area -->
+        <div class="relative z-10 p-12 lg:p-20 flex flex-col h-full justify-between gap-16">
+            <div class="max-w-md ml-auto text-right">
+                <p class="font-playfair italic text-3xl lg:text-4xl text-white leading-relaxed">
+                    "A great story told badly is still a great story. A great story told visually is unforgettable."
+                </p>
+            </div>
+
+            <div class="flex flex-col gap-12 mt-auto">
+                <!-- Placeholder Grid -->
+                <div class="grid grid-cols-3 gap-4 opacity-50">
+                    <div class="aspect-video bg-slate-800 border-2 border-slate-700 flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">image</span></div>
+                    <div class="aspect-video bg-slate-800 border-2 border-slate-700 flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">image</span></div>
+                    <div class="aspect-video bg-slate-800 border-2 border-slate-700 flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">image</span></div>
+                    <div class="aspect-video bg-slate-800 border-2 border-slate-700 flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">image</span></div>
+                    <div class="aspect-video bg-slate-800 border-2 border-slate-700 flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">image</span></div>
+                    <div class="aspect-video bg-slate-800 border-2 border-slate-700 flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">image</span></div>
+                </div>
+
+                <!-- Terminal Log (Hidden until submit) -->
+                <div class="font-mono text-[10px] text-primary/80 flex-col gap-2 min-h-[60px]" id="loading-terminal">
+                    <div class="flex items-center gap-2 opacity-50" id="term-idle">
+                        <span class="animate-pulse">_</span>
+                        <span>WAITING FOR INPUT</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Absolute Texture/Overlay for "Art" Feel -->
+        <div class="absolute inset-0 opacity-5 pointer-events-none mix-blend-overlay">
+            <div class="w-full h-full bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+        </div>
+    </aside>
+
+</div>
+
+<script>
+    const SAMPLE = `A small logistics startup was drowning in manual data-entry errors, losing thousands of dollars weekly and burning out their entire team. They had tried spreadsheets, sticky notes, and three different project management tools — nothing stuck. Then they implemented our AI-powered operations platform, and within two weeks, error rates dropped by 94 percent. Today their team focuses on strategic growth instead of firefighting, and they have successfully scaled to three new cities in just six months.`;
+
+    const textArea = document.getElementById('pitch-text');
+    const charCount = document.getElementById('char-count');
+
+    function updateCount() {
+        const len = textArea.value.length;
+        charCount.textContent = len;
+        charCount.style.color = len > 2800 ? '#e7390d' : '';
+    }
+
+    function loadSample() {
+        textArea.value = SAMPLE;
+        updateCount();
+    }
+
+    textArea.addEventListener('input', updateCount);
+
+    document.getElementById('pitch-form').addEventListener('submit', function(e) {
+        const text = textArea.value.trim();
+        if (!text) { e.preventDefault(); return; }
+
+        const term = document.getElementById('loading-terminal');
+        const idle = document.getElementById('term-idle');
+        if (idle) idle.style.display = 'none';
+
+        const submitBtnEl = document.getElementById('submit-btn');
+        submitBtnEl.disabled = true;
+        submitBtnEl.innerHTML = `GENERATING STORYBOARD... <span class="material-symbols-outlined text-3xl animate-spin">sync</span>`;
+
+        term.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="animate-pulse">●</span>
+                <span>SEGMENTING NARRATIVE... [OK]</span>
+            </div>
+            <div class="flex items-center gap-2 mt-1">
+                <span class="animate-pulse">●</span>
+                <span>ENGINEERING PROMPTS... [IN PROGRESS]</span>
+            </div>
+            <div class="flex items-center gap-2 mt-1 opacity-50">
+                <span>_</span>
+                <span>AWAITING IMAGE SYNTHESIS ENGINE</span>
+            </div>
+        `;
+
+        setTimeout(() => {
+            if (!submitBtnEl.disabled) return;
+            term.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="">●</span>
+                    <span>SEGMENTING NARRATIVE... [DONE]</span>
+                </div>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="">●</span>
+                    <span>ENGINEERING PROMPTS... [DONE]</span>
+                </div>
+                <div class="flex items-center gap-2 mt-1 text-primary">
+                    <span class="animate-pulse">●</span>
+                    <span>GENERATING HIGH-FI IMAGES... [PLEASE WAIT]</span>
+                </div>
+            `;
+        }, 3500);
+    });
+</script>
+</body>
+</html>
