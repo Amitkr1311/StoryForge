@@ -114,10 +114,10 @@ def health():
 def _available_providers() -> list[dict]:
     """Return which image providers are configured."""
     return [
-        {"id": "huggingface", "label": "FLUX.1-schnell (HuggingFace — Free)",      "available": bool(os.getenv("HF_TOKEN"))},
-        {"id": "gemini",      "label": "Gemini 3.1 Flash Lite Preview (Google AI Studio)",      "available": bool(os.getenv("GEMINI_API_KEY"))},
-        {"id": "stability",   "label": "Stable Diffusion 3.5 (Stability AI)",      "available": bool(os.getenv("STABILITY_API_KEY"))},
-        {"id": "stablehorde", "label": "Stable Diffusion (Stable Horde — Free)",   "available": True},
+        {"id": "huggingface", "label": "FLUX.1-schnell", "available": bool(os.getenv("HF_TOKEN"))},
+        {"id": "gemini",      "label": "Gemini 3.1 Flash Lite Preview", "available": bool(os.getenv("GEMINI_API_KEY"))},
+        {"id": "stability",   "label": "Stable Diffusion 3.5", "available": bool(os.getenv("STABILITY_API_KEY"))},
+        {"id": "stablehorde", "label": "Stable Diffusion (Stable Horde)", "available": True},
     ]
 
 
