@@ -269,9 +269,10 @@
 
     textArea.addEventListener('input', updateCount);
 
-    document.getElementById('pitch-form').addEventListener('submit', function(e) {
+    document.getElementById('pitch-form').addEventListener('submit', async function(e) {
+        e.preventDefault(); // Prevent standard POST
         const text = textArea.value.trim();
-        if (!text) { e.preventDefault(); return; }
+        if (!text) { return; }
 
         const term = document.getElementById('loading-terminal');
         const termIdle = document.getElementById('term-idle');
@@ -286,16 +287,17 @@
         let glitchInterval;
         if (termIdleText) {
             let iteration = 0;
+            const targetText = "INITIALIZING_PIPELINE";
             glitchInterval = setInterval(() => {
-                termIdleText.innerText = termIdleText.innerText.split("")
+                termIdleText.innerText = targetText.split("")
                     .map((letter, index) => {
                         if(index < iteration) {
-                            return "INITIALIZING_PIPELINE"[index];
+                            return targetText[index];
                         }
                         return chars[Math.floor(Math.random() * 42)]
                     })
                     .join("");
-                if(iteration >= 21){ 
+                if(iteration >= targetText.length){ 
                     clearInterval(glitchInterval);
                 }
                 iteration += 1 / 3;
@@ -313,48 +315,85 @@
             icon.classList.remove('text-white/5');
         });
 
-        setTimeout(() => {
-            if (glitchInterval) clearInterval(glitchInterval);
-            if (termIdle) termIdle.style.display = 'none';
-            term.innerHTML = `
-                <div class="flex flex-col gap-1">
-                    <div class="flex items-center gap-2">
-                        <span class="animate-pulse">●</span>
-                        <span>SEGMENTING NARRATIVE... [OK]</span>
-                    </div>
-                    <div class="flex items-center gap-2 mt-1">
-                        <span class="animate-pulse">●</span>
-                        <span>ENGINEERING PROMPTS... [IN PROGRESS]</span>
-                    </div>
-                    <div class="flex items-center gap-2 mt-1 opacity-50">
-                        <span>_</span>
-                        <span>AWAITING IMAGE SYNTHESIS ENGINE</span>
-                    </div>
-                </div>
-            `;
+        try {
+            const formData = new FormData(this);
+            const response = await fetch('/generate', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
             
-            // Second stage of terminal
+            if (!response.ok) {
+                term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span class="font-bold">ERROR:</span> <span>${data.error || "Unknown error occurred."}</span></div>`;
+                submitBtnEl.disabled = false;
+                submitBtnEl.innerHTML = `GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>`;
+                return;
+            }
+            
             setTimeout(() => {
-                if (!submitBtnEl.disabled) return;
-                term.innerHTML = `
-                    <div class="flex flex-col gap-1">
-                        <div class="flex items-center gap-2">
-                            <span class="">●</span>
-                            <span>SEGMENTING NARRATIVE... [DONE]</span>
-                        </div>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="">●</span>
-                            <span>ENGINEERING PROMPTS... [DONE]</span>
-                        </div>
-                        <div class="flex items-center gap-2 mt-1 text-primary">
-                            <span class="animate-pulse">●</span>
-                            <span>GENERATING HIGH-FI IMAGES... [PLEASE WAIT]</span>
-                        </div>
-                    </div>
-                `;
-            }, 3000);
-        }, 1500);
+                if (glitchInterval) clearInterval(glitchInterval);
+                if (termIdle) termIdle.style.display = 'none';
+                term.innerHTML = ''; // Start pristine terminal log
+            }, 1000); // Leave the cool glitch text for 1 sec minimum
 
+            const eventSource = new EventSource(`/stream/${data.task_id}`);
+            
+            eventSource.onmessage = function(event) {
+                const payload = JSON.parse(event.data);
+                
+                if (payload.status === 'error') {
+                    eventSource.close();
+                    term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span class="font-bold">ERROR:</span> <span>${payload.error}</span></div>`;
+                    submitBtnEl.disabled = false;
+                    submitBtnEl.innerHTML = `GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>`;
+                    return;
+                }
+                
+                if (payload.status === 'complete') {
+                    eventSource.close();
+                    document.open();
+                    document.write(payload.html);
+                    document.close();
+                    return;
+                }
+                
+                // Track terminal contents to avoid duplicated entries if the status string didn't actually change
+                const lines = term.querySelectorAll('.term-line');
+                const lastLine = lines.length > 0 ? lines[lines.length - 1].innerText : "";
+                
+                if (!lastLine.includes(payload.message)) {
+                    // Turn off pulse on old lines
+                    const oldPulses = term.querySelectorAll('.animate-pulse');
+                    oldPulses.forEach(el => {
+                        el.classList.remove('animate-pulse');
+                        if (el.innerText === '●') el.innerText = '○';
+                    });
+                    
+                    let highlightClass = payload.status === 'generating' ? 'text-primary' : '';
+                    term.innerHTML += `
+                        <div class="flex items-center gap-2 mt-1 term-line ${highlightClass}">
+                            <span class="animate-pulse">●</span>
+                            <span>${payload.message}</span>
+                        </div>
+                    `;
+                }
+                
+                // Always scroll to bottom
+                term.scrollTop = term.scrollHeight;
+            };
+            
+            eventSource.onerror = function() {
+                eventSource.close();
+                term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span>CONNECTION LOST TO BACKGROUND PIPELINE</span></div>`;
+                submitBtnEl.disabled = false;
+                submitBtnEl.innerHTML = `GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>`;
+            };
+
+        } catch (err) {
+            term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span class="font-bold">ERROR:</span> <span>${err.message}</span></div>`;
+            submitBtnEl.disabled = false;
+            submitBtnEl.innerHTML = `GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>`;
+        }
     });
 
     // Rotating Quotes Logic
