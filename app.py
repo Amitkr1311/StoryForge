@@ -5,7 +5,11 @@ Flask application: orchestrates segmentation → prompt engineering → image ge
 
 import os
 import traceback
-from flask import Flask, render_template, request, jsonify
+import threading
+import uuid
+import time
+import json
+from flask import Flask, render_template, request, jsonify, Response
 from dotenv import load_dotenv
 
 from segmenter import segment_text
@@ -16,6 +20,9 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 1 * 1024 * 1024  # 1 MB max request
+
+# In-memory task tracker for SSE status streaming
+_tasks = {}
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
@@ -38,33 +45,51 @@ def index():
 @app.route("/generate", methods=["POST"])
 def generate():
     """
-    Main pipeline endpoint.
-    Accepts: text (str), style (str), provider (str), llm_enhance (bool)
-    Returns: renders storyboard.html with generated panels
+    Kicks off the pipeline in a background thread and returns a task_id for tracking.
     """
     raw_text    = request.form.get("text", "").strip()
     style       = request.form.get("style", "cinematic")
     provider    = request.form.get("provider", "huggingface")
     llm_enhance = request.form.get("llm_enhance") == "on"
 
-    # ── Validation ────────────────────────────────────────────────────────────
-    if not raw_text:
-        return render_template("index.html", error="Please provide a narrative text."), 400
-    if len(raw_text) < 20:
-        return render_template("index.html", error="Text is too short. Provide at least 3 sentences."), 400
+    if not raw_text or len(raw_text) < 20:
+        return jsonify({"error": "Text is too short. Provide at least 3 sentences."}), 400
     if len(raw_text) > 3000:
-        return render_template("index.html", error="Text is too long. Keep it under 3,000 characters."), 400
+        return jsonify({"error": "Text is too long. Keep it under 3,000 characters."}), 400
 
+    task_id = str(uuid.uuid4())
+    _tasks[task_id] = {
+        "status": "initializing",
+        "message": "Initializing pipeline...",
+        "result": None,
+        "error": None
+    }
+
+    # Start background thread
+    t = threading.Thread(target=_run_pipeline, args=(task_id, raw_text, style, provider, llm_enhance))
+    t.start()
+
+    return jsonify({"task_id": task_id})
+
+
+def _run_pipeline(task_id: str, raw_text: str, style: str, provider: str, llm_enhance: bool):
     try:
+        task = _tasks[task_id]
+        
         # ── Step 1: Segment text into scenes ──────────────────────────────────
-        global_context, scenes = segment_text(raw_text, max_scenes=5, use_llm=llm_enhance)
+        task["status"] = "segmenting"
+        task["message"] = "SEGMENTING NARRATIVE... [IN PROGRESS]"
+        
+        global_context, scenes = segment_text(raw_text, max_scenes=6, use_llm=llm_enhance)
         if len(scenes) < 2:
-            return render_template(
-                "index.html",
-                error="Could not extract enough scenes. Try a longer narrative with 3–5 sentences."
-            ), 400
+            raise ValueError("Could not extract enough scenes. Try a longer narrative with 3–5 sentences.")
+
+        task["message"] = f"SEGMENTING NARRATIVE... [OK] ({len(scenes)} scenes found)"
 
         # ── Step 2: Engineer a visual prompt for each scene ───────────────────
+        task["status"] = "prompting"
+        task["message"] = "ENGINEERING PROMPTS... [IN PROGRESS]"
+        
         engineer = get_prompt_engineer(style=style, use_llm=llm_enhance)
         total_scenes = len(scenes)
         prompts = [
@@ -72,36 +97,91 @@ def generate():
             for idx, scene in enumerate(scenes)
         ]
 
+        task["message"] = "ENGINEERING PROMPTS... [OK]"
+
         # ── Step 3: Generate an image for each prompt ─────────────────────────
+        task["status"] = "generating"
         generator = get_generator(provider)
         panels    = []
+        
         for idx, (scene, prompt) in enumerate(zip(scenes, prompts)):
+            task["message"] = f"GENERATING HIGH-FI IMAGES... (Panel {idx + 1}/{total_scenes})"
             image_data = generator.generate(prompt, index=idx)
             panels.append({
                 "number":    idx + 1,
                 "caption":   scene,
                 "prompt":    prompt,
-                "image_url": image_data["url"],      # URL or data-URI
-                "is_local":  image_data["is_local"],  # True = saved to /static/output/
+                "image_url": image_data["url"],      
+                "is_local":  image_data["is_local"],  
             })
 
         # ── Step 4: Render storyboard ──────────────────────────────────────────
-        return render_template(
-            "storyboard.html",
-            panels=panels,
-            style=style,
-            provider=provider,
-            original_text=raw_text,
-        )
+        task["status"] = "rendering"
+        task["message"] = "COMPILING STORYBOARD..."
+        
+        # Render the HTML directly so the frontend can inject it
+        with app.app_context():
+            final_html = render_template(
+                "storyboard.html",
+                panels=panels,
+                style=style,
+                provider=provider,
+                original_text=raw_text,
+            )
+            
+        task["result"] = final_html
+        task["status"] = "complete"
 
     except ValueError as ve:
-        return render_template("index.html", error=str(ve)), 400
-    except Exception:
+        task["status"] = "error"
+        task["error"] = str(ve)
+    except Exception as e:
         app.logger.error(traceback.format_exc())
-        return render_template(
-            "index.html",
-            error="An unexpected error occurred. Check your API keys and try again."
-        ), 500
+        task["status"] = "error"
+        task["error"] = "An unexpected error occurred. Check your API keys and try again."
+
+
+@app.route("/stream/<task_id>")
+def stream(task_id):
+    """
+    Server-Sent Events endpoint to yield live update status to the frontend.
+    """
+    def generate_events():
+        last_status = None
+        last_message = None
+        
+        while True:
+            if task_id not in _tasks:
+                yield f"data: {json.dumps({'status': 'error', 'error': 'Task not found'})}\n\n"
+                break
+                
+            task = _tasks[task_id]
+            
+            # Only send if state changed to avoid spam
+            if task["status"] != last_status or task["message"] != last_message:
+                last_status = task["status"]
+                last_message = task["message"]
+                
+                payload = {
+                    "status": task["status"],
+                    "message": task["message"],
+                }
+                
+                if task["status"] == "complete":
+                    payload["html"] = task["result"]
+                    yield f"data: {json.dumps(payload)}\n\n"
+                    break
+                    
+                if task["status"] == "error":
+                    payload["error"] = task["error"]
+                    yield f"data: {json.dumps(payload)}\n\n"
+                    break
+                    
+                yield f"data: {json.dumps(payload)}\n\n"
+                
+            time.sleep(0.5)
+
+    return Response(generate_events(), mimetype="text/event-stream")
 
 
 @app.route("/health")

@@ -124,7 +124,7 @@
                 <input type="checkbox" name="llm_enhance" value="on" class="peer sr-only">
                 <div class="relative inline-block w-12 h-6 transition duration-300 ease-in-out bg-slate-300 peer-checked:bg-primary border-2 border-slate-900 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:w-4 after:h-4 after:bg-white after:border after:border-slate-900 after:transition-all peer-checked:after:translate-x-[22px]">
                 </div>
-                <span class="font-mono text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-primary transition-colors">SUPERCHARGE PROMPTS WITH GEMINI FLASH</span>
+                <span class="font-mono text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-primary transition-colors">SUPERCHARGE PROMPTS</span>
             </label>
 
             <!-- Submit Button -->
@@ -145,28 +145,97 @@
 
         <!-- Content Area -->
         <div class="relative z-10 p-12 lg:p-20 flex flex-col h-full justify-between gap-16">
-            <div class="max-w-md ml-auto text-right">
-                <p class="font-playfair italic text-3xl lg:text-4xl text-white leading-relaxed">
-                    "A great story told badly is still a great story. A great story told visually is unforgettable."
-                </p>
+            <div class="max-w-md ml-auto text-right min-h-[150px] lg:min-h-[200px] flex items-center justify-end">
+                <div class="flex flex-col gap-2">
+                    <span class="font-mono text-[10px] text-primary tracking-[0.3em] font-bold">MANIFESTO / 001</span>
+                    <p id="quote-text" class="font-playfair italic text-3xl lg:text-4xl text-white leading-relaxed transition-opacity duration-1000 opacity-100 w-full">
+                        "A <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">GREAT STORY</span> told badly is still a great story. A great story told visually is <span class="underline decoration-1 underline-offset-8">unforgettable</span>."
+                    </p>
+                </div>
+            </div>
+            
+            <div class="absolute top-1/2 right-12 -translate-y-1/2 flex flex-col items-end gap-24 opacity-40 pointer-events-none hidden lg:flex">
+                <div class="border-2 border-primary text-primary font-mono text-xs px-4 py-1 rotate-12 font-bold tracking-widest hidden lg:block">CONFIDENTIAL</div>
+                <div class="font-mono text-[10px] text-white flex flex-col items-end">
+                    <span id="tc-counter">TC: 00:12:44:02</span>
+                    <span>FPS: <span id="fps-counter">23.976</span></span>
+                    <span>CAM: ARRI_RAW</span>
+                </div>
             </div>
 
             <div class="flex flex-col gap-12 mt-auto">
                 <!-- Placeholder Grid -->
-                <div class="grid grid-cols-3 gap-4 opacity-50">
-                    <div class="aspect-video bg-slate-800 border-2 border-slate-700 flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">image</span></div>
-                    <div class="aspect-video bg-slate-800 border-2 border-slate-700 flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">image</span></div>
-                    <div class="aspect-video bg-slate-800 border-2 border-slate-700 flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">image</span></div>
-                    <div class="aspect-video bg-slate-800 border-2 border-slate-700 flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">image</span></div>
-                    <div class="aspect-video bg-slate-800 border-2 border-slate-700 flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">image</span></div>
-                    <div class="aspect-video bg-slate-800 border-2 border-slate-700 flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">image</span></div>
+                <div class="grid grid-cols-3 gap-4 opacity-50 transition-opacity duration-500" id="plates-grid">
+                    <div class="flex flex-col gap-3 group relative cursor-crosshair plate-container">
+                        <div class="aspect-[4/5] bg-[#1a1a1a] border border-white/10 flex items-center justify-center relative overflow-hidden transition-colors group-hover:border-primary/50 plate-box">
+                            <span class="material-symbols-outlined text-white/5 text-4xl plate-icon transition-transform group-hover:scale-110">image</span>
+                            <div class="absolute top-2 left-2 w-2 h-2 border-t border-l border-primary/50"></div>
+                            
+                            <!-- Hover state -->
+                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 to-transparent h-1/2 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-multiply"></div>
+                            <div class="absolute bottom-2 left-2 right-2 text-[8px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity text-center plate-desc z-10">ESTABLISHING SHOT</div>
+                        </div>
+                        <span class="font-mono text-[9px] text-white/40 tracking-tighter">PLATE_01</span>
+                    </div>
+
+                    <div class="flex flex-col gap-3 group relative cursor-crosshair plate-container">
+                        <div class="aspect-[4/5] bg-[#1a1a1a] border border-white/10 flex items-center justify-center relative overflow-hidden transition-colors group-hover:border-primary/50 plate-box">
+                            <span class="material-symbols-outlined text-white/5 text-4xl plate-icon transition-transform group-hover:scale-110">image</span>
+                            <div class="absolute top-2 left-2 w-2 h-2 border-t border-l border-primary/50"></div>
+                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 to-transparent h-1/2 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-multiply"></div>
+                            <div class="absolute bottom-2 left-2 right-2 text-[8px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity text-center plate-desc z-10">CHARACTER INTRO</div>
+                        </div>
+                        <span class="font-mono text-[9px] text-white/40 tracking-tighter">PLATE_02</span>
+                    </div>
+
+                    <div class="flex flex-col gap-3 group relative cursor-crosshair plate-container">
+                        <div class="aspect-[4/5] bg-[#1a1a1a] border border-white/10 flex items-center justify-center relative overflow-hidden transition-colors group-hover:border-primary/50 plate-box">
+                            <span class="material-symbols-outlined text-white/5 text-4xl plate-icon transition-transform group-hover:scale-110">image</span>
+                            <div class="absolute top-2 left-2 w-2 h-2 border-t border-l border-primary/50"></div>
+                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 to-transparent h-1/2 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-multiply"></div>
+                            <div class="absolute bottom-2 left-2 right-2 text-[8px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity text-center plate-desc z-10">ACTION SEQUENCE</div>
+                        </div>
+                        <span class="font-mono text-[9px] text-white/40 tracking-tighter">PLATE_03</span>
+                    </div>
+
+                    <div class="flex flex-col gap-3 group relative cursor-crosshair plate-container">
+                        <div class="aspect-[4/5] bg-[#1a1a1a] border border-white/10 flex items-center justify-center relative overflow-hidden transition-colors group-hover:border-primary/50 plate-box">
+                            <span class="material-symbols-outlined text-white/5 text-4xl plate-icon transition-transform group-hover:scale-110">image</span>
+                            <div class="absolute top-2 left-2 w-2 h-2 border-t border-l border-primary/50"></div>
+                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 to-transparent h-1/2 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-multiply"></div>
+                            <div class="absolute bottom-2 left-2 right-2 text-[8px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity text-center plate-desc z-10">CLIMAX</div>
+                        </div>
+                        <span class="font-mono text-[9px] text-white/40 tracking-tighter">PLATE_04</span>
+                    </div>
+
+                    <div class="flex flex-col gap-3 group relative cursor-crosshair plate-container">
+                        <div class="aspect-[4/5] bg-[#1a1a1a] border border-white/10 flex items-center justify-center relative overflow-hidden transition-colors group-hover:border-primary/50 plate-box">
+                            <span class="material-symbols-outlined text-white/5 text-4xl plate-icon transition-transform group-hover:scale-110">image</span>
+                            <div class="absolute top-2 left-2 w-2 h-2 border-t border-l border-primary/50"></div>
+                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 to-transparent h-1/2 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-multiply"></div>
+                            <div class="absolute bottom-2 left-2 right-2 text-[8px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity text-center plate-desc z-10">ENVIRONMENT</div>
+                        </div>
+                        <span class="font-mono text-[9px] text-white/40 tracking-tighter">PLATE_05</span>
+                    </div>
+
+                    <div class="flex flex-col gap-3 group relative cursor-crosshair plate-container">
+                        <div class="aspect-[4/5] bg-[#1a1a1a] border border-white/10 flex items-center justify-center relative overflow-hidden transition-colors group-hover:border-primary/50 plate-box">
+                            <span class="material-symbols-outlined text-white/5 text-4xl plate-icon transition-transform group-hover:scale-110">image</span>
+                            <div class="absolute top-2 left-2 w-2 h-2 border-t border-l border-primary/50"></div>
+                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 to-transparent h-1/2 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-multiply"></div>
+                            <div class="absolute bottom-2 left-2 right-2 text-[8px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity text-center plate-desc z-10">RESOLUTION</div>
+                        </div>
+                        <span class="font-mono text-[9px] text-white/40 tracking-tighter">PLATE_06</span>
+                    </div>
                 </div>
 
                 <!-- Terminal Log (Hidden until submit) -->
-                <div class="font-mono text-[10px] text-primary/80 flex-col gap-2 min-h-[60px]" id="loading-terminal">
-                    <div class="flex items-center gap-2 opacity-50" id="term-idle">
-                        <span class="animate-pulse">_</span>
-                        <span>WAITING FOR INPUT</span>
+                <div class="font-mono text-[10px] text-primary/80 flex flex-col gap-1 min-h-[60px]" id="loading-terminal">
+                    <div class="flex flex-col gap-1 opacity-50" id="term-idle">
+                        <div class="flex items-center gap-2">
+                            <span class="animate-pulse">_</span>
+                            <span id="term-idle-text">WAITING FOR INPUT</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -176,6 +245,7 @@
         <div class="absolute inset-0 opacity-5 pointer-events-none mix-blend-overlay">
             <div class="w-full h-full bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
         </div>
+        <div class="absolute bottom-0 left-0 w-full h-[3px] bg-primary z-50"></div>
     </aside>
 
 </div>
@@ -199,51 +269,180 @@
 
     textArea.addEventListener('input', updateCount);
 
-    document.getElementById('pitch-form').addEventListener('submit', function(e) {
+    document.getElementById('pitch-form').addEventListener('submit', async function(e) {
+        e.preventDefault(); // Prevent standard POST
         const text = textArea.value.trim();
-        if (!text) { e.preventDefault(); return; }
+        if (!text) { return; }
 
         const term = document.getElementById('loading-terminal');
-        const idle = document.getElementById('term-idle');
-        if (idle) idle.style.display = 'none';
-
+        const termIdle = document.getElementById('term-idle');
+        const termIdleText = document.getElementById('term-idle-text');
+        
         const submitBtnEl = document.getElementById('submit-btn');
         submitBtnEl.disabled = true;
         submitBtnEl.innerHTML = `GENERATING STORYBOARD... <span class="material-symbols-outlined text-3xl animate-spin">sync</span>`;
 
-        term.innerHTML = `
-            <div class="flex items-center gap-2">
-                <span class="animate-pulse">●</span>
-                <span>SEGMENTING NARRATIVE... [OK]</span>
-            </div>
-            <div class="flex items-center gap-2 mt-1">
-                <span class="animate-pulse">●</span>
-                <span>ENGINEERING PROMPTS... [IN PROGRESS]</span>
-            </div>
-            <div class="flex items-center gap-2 mt-1 opacity-50">
-                <span>_</span>
-                <span>AWAITING IMAGE SYNTHESIS ENGINE</span>
-            </div>
-        `;
+        // Matrix Hacker Text Effect for initial terminal loading
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
+        let glitchInterval;
+        if (termIdleText) {
+            let iteration = 0;
+            const targetText = "INITIALIZING_PIPELINE";
+            glitchInterval = setInterval(() => {
+                termIdleText.innerText = targetText.split("")
+                    .map((letter, index) => {
+                        if(index < iteration) {
+                            return targetText[index];
+                        }
+                        return chars[Math.floor(Math.random() * 42)]
+                    })
+                    .join("");
+                if(iteration >= targetText.length){ 
+                    clearInterval(glitchInterval);
+                }
+                iteration += 1 / 3;
+            }, 30);
+        }
 
-        setTimeout(() => {
-            if (!submitBtnEl.disabled) return;
-            term.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <span class="">●</span>
-                    <span>SEGMENTING NARRATIVE... [DONE]</span>
-                </div>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="">●</span>
-                    <span>ENGINEERING PROMPTS... [DONE]</span>
-                </div>
-                <div class="flex items-center gap-2 mt-1 text-primary">
-                    <span class="animate-pulse">●</span>
-                    <span>GENERATING HIGH-FI IMAGES... [PLEASE WAIT]</span>
-                </div>
-            `;
-        }, 3500);
+        // Animated Plates Grid
+        const grid = document.getElementById('plates-grid');
+        grid.classList.remove('opacity-50');
+        grid.classList.add('opacity-100');
+        const icons = grid.querySelectorAll('.plate-icon');
+        icons.forEach(icon => {
+            icon.textContent = 'sync';
+            icon.classList.add('animate-spin', 'text-primary/70');
+            icon.classList.remove('text-white/5');
+        });
+
+        try {
+            const formData = new FormData(this);
+            const response = await fetch('/generate', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (!response.ok) {
+                term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span class="font-bold">ERROR:</span> <span>${data.error || "Unknown error occurred."}</span></div>`;
+                submitBtnEl.disabled = false;
+                submitBtnEl.innerHTML = `GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>`;
+                return;
+            }
+            
+            setTimeout(() => {
+                if (glitchInterval) clearInterval(glitchInterval);
+                if (termIdle) termIdle.style.display = 'none';
+                term.innerHTML = ''; // Start pristine terminal log
+            }, 1000); // Leave the cool glitch text for 1 sec minimum
+
+            const eventSource = new EventSource(`/stream/${data.task_id}`);
+            
+            eventSource.onmessage = function(event) {
+                const payload = JSON.parse(event.data);
+                
+                if (payload.status === 'error') {
+                    eventSource.close();
+                    term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span class="font-bold">ERROR:</span> <span>${payload.error}</span></div>`;
+                    submitBtnEl.disabled = false;
+                    submitBtnEl.innerHTML = `GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>`;
+                    return;
+                }
+                
+                if (payload.status === 'complete') {
+                    eventSource.close();
+                    document.open();
+                    document.write(payload.html);
+                    document.close();
+                    return;
+                }
+                
+                // Track terminal contents to avoid duplicated entries if the status string didn't actually change
+                const lines = term.querySelectorAll('.term-line');
+                const lastLine = lines.length > 0 ? lines[lines.length - 1].innerText : "";
+                
+                if (!lastLine.includes(payload.message)) {
+                    // Turn off pulse on old lines
+                    const oldPulses = term.querySelectorAll('.animate-pulse');
+                    oldPulses.forEach(el => {
+                        el.classList.remove('animate-pulse');
+                        if (el.innerText === '●') el.innerText = '○';
+                    });
+                    
+                    let highlightClass = payload.status === 'generating' ? 'text-primary' : '';
+                    term.innerHTML += `
+                        <div class="flex items-center gap-2 mt-1 term-line ${highlightClass}">
+                            <span class="animate-pulse">●</span>
+                            <span>${payload.message}</span>
+                        </div>
+                    `;
+                }
+                
+                // Always scroll to bottom
+                term.scrollTop = term.scrollHeight;
+            };
+            
+            eventSource.onerror = function() {
+                eventSource.close();
+                term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span>CONNECTION LOST TO BACKGROUND PIPELINE</span></div>`;
+                submitBtnEl.disabled = false;
+                submitBtnEl.innerHTML = `GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>`;
+            };
+
+        } catch (err) {
+            term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span class="font-bold">ERROR:</span> <span>${err.message}</span></div>`;
+            submitBtnEl.disabled = false;
+            submitBtnEl.innerHTML = `GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>`;
+        }
     });
+
+    // Rotating Quotes Logic
+    const quotes = [
+        `"A <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">GREAT STORY</span> told badly is still a great story. A great story told visually is <span class="underline decoration-1 underline-offset-8">unforgettable</span>."`,
+        `"Show, <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">DON'T TELL</span>. Let the imagery speak volumes where <span class="underline decoration-1 underline-offset-8">words fall short</span>."`,
+        `"Every great film, product, or movement started as a <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">CLEAR VISION</span>."`,
+        `"Before they build it, they must <span class="underline decoration-1 underline-offset-8">believe it</span>. <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">VISUALS</span> bridge that gap."`,
+        `"Translate your narrative into a <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">CINEMATIC EXPERIENCE</span>, one frame at a time."`,
+        `"The difference between a good pitch and a <span class="underline decoration-1 underline-offset-8">funded pitch</span> is <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">WHAT THEY CAN SEE</span>."`
+    ];
+    let quoteIndex = 0;
+    const quoteEl = document.getElementById('quote-text');
+
+    setInterval(() => {
+        // Fade out
+        quoteEl.classList.remove('opacity-100');
+        quoteEl.classList.add('opacity-0');
+        
+        setTimeout(() => {
+            // Change text and fade back in
+            quoteIndex = (quoteIndex + 1) % quotes.length;
+            quoteEl.innerHTML = quotes[quoteIndex];
+            quoteEl.classList.remove('opacity-0');
+            quoteEl.classList.add('opacity-100');
+        }, 1000); // Wait for CSS transition (1000ms) to complete before swapping text
+    }, 6000); // Swap quote every 6 seconds
+
+    // Dynamic Timecode
+    let frames = 2; // 00:12:44:02 start
+    let seconds = 44;
+    let minutes = 12;
+    let hours = 0;
+    setInterval(() => {
+        frames += 1;
+        if (frames >= 24) { frames = 0; seconds += 1; }
+        if (seconds >= 60) { seconds = 0; minutes += 1; }
+        
+        const pad = (n) => n.toString().padStart(2, '0');
+        const tcStr = `TC: ${pad(hours)}:${pad(minutes)}:${pad(seconds)}:${pad(frames)}`;
+        const tcEl = document.getElementById('tc-counter');
+        if (tcEl) tcEl.innerText = tcStr;
+        
+        // Slight fluctuation to FPS
+        const fpsEl = document.getElementById('fps-counter');
+        if(fpsEl && Math.random() > 0.8) {
+            fpsEl.innerText = (23.970 + Math.random() * 0.010).toFixed(3);
+        }
+    }, 1000 / 24); // 24 FPS
 </script>
 </body>
 </html>
