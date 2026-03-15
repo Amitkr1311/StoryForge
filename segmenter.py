@@ -89,6 +89,10 @@ def _llm_segment(text: str, max_scenes: int, api_key: str) -> tuple[str, list[st
 
     client = genai.Client(api_key=api_key)
 
+    # Enforce a consistent minimum and validated maximum for scene counts
+    min_scenes = 2
+    effective_max_scenes = max(max_scenes, min_scenes)
+
     system_msg = (
     "You are an expert storyboard supervisor preparing a visual shooting script. "
     "Your output must be strictly valid JSON with exactly two keys: "
@@ -105,7 +109,7 @@ def _llm_segment(text: str, max_scenes: int, api_key: str) -> tuple[str, list[st
     "(e.g. 'spreadsheet-covered monitors')\n"
     "Do NOT include emotional language, plot summary, or abstract concepts.\n\n"
 
-    "KEY 2 — 'scenes' (array of strings, minimum 2, maximum 5):\n"
+    f"KEY 2 — 'scenes' (array of strings, minimum {min_scenes}, maximum {effective_max_scenes}):\n"
     "Split the narrative into distinct visual moments — each one a single thing "
     "a camera could capture in a still frame.\n"
     "Rules for each scene string:\n"
@@ -136,7 +140,7 @@ def _llm_segment(text: str, max_scenes: int, api_key: str) -> tuple[str, list[st
     try:
         # Use JSON schema constrained output for reliable parsing
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-3.1-flash-lite-preview",
             contents=user_msg,
             config=types.GenerateContentConfig(
                 system_instruction=system_msg,
@@ -149,8 +153,8 @@ def _llm_segment(text: str, max_scenes: int, api_key: str) -> tuple[str, list[st
                     "global_context": {"type": "STRING"},
                     "scenes": {
                         "type": "ARRAY",
-                        "minItems": 2,
-                        "maxItems": 5,
+                        "minItems": min_scenes,
+                        "maxItems": effective_max_scenes,
                         "items": {"type": "STRING"}
                     }
                 },
@@ -159,10 +163,10 @@ def _llm_segment(text: str, max_scenes: int, api_key: str) -> tuple[str, list[st
         )
     )
     except Exception as e:
-        raise ValueError(f"Gemini API call failed during segmentation: {e}")
+        raise ValueError(f"Gemini API call failed during segmentation: {e}") from e
 
     try:
-        return _parse_segmentation_response(response.text, max_scenes=max_scenes, min_scenes=2)
+        return _parse_segmentation_response(response.text, max_scenes=max_scenes, min_scenes=min_scenes)
     except ValueError as e:
         raise
 
@@ -177,7 +181,7 @@ def _parse_segmentation_response(
     try:
         data = json.loads(response_text)
     except json.JSONDecodeError as e:
-        raise ValueError(f"Gemini returned invalid JSON: {e}")
+        raise ValueError(f"Gemini returned invalid JSON: {e}") from e
 
     # ── 2. Extract with fallbacks ──────────────────────────────
     context = data.get("global_context", "").strip()
@@ -203,7 +207,7 @@ def _parse_segmentation_response(
     seen   = set()
     unique = []
     for scene in scenes:
-        key = scene[:40].lower()   # compare first 40 chars
+        key = scene.strip().lower()
         if key not in seen:
             seen.add(key)
             unique.append(scene)

@@ -62,9 +62,10 @@ class GeminiPromptEngineer(BasePromptEngineer):
         if not self.api_key or not self._client:
             return self._fallback.enhance(sentence, global_context, scene_index, total_scenes)
 
+        from google.genai import errors
         try:
             return self._llm_enhance(sentence, global_context, scene_index, total_scenes)
-        except Exception:
+        except errors.APIError:
             traceback.print_exc()
             print("[GeminiPromptEngineer] LLM call failed — falling back to rule-based.")
             return self._fallback.enhance(sentence, global_context, scene_index, total_scenes)
@@ -106,7 +107,7 @@ class GeminiPromptEngineer(BasePromptEngineer):
 
         user_msg = (
             "--- LAYER 1: ANCHOR CONTEXT ---\n"
-            f"Global Setting & Subjects: {global_context or 'Standard professional environment'}\n\n"
+            f"Global Setting & Subjects: {global_context or 'Not specified'}\n\n"
             "--- LAYER 2: SCENE BEAT (LITERAL TRANSLATION ONLY) ---\n"
             f"Current Action: \"{sentence}\"\n"
             f"Emotional Tone: {emotional_tone}\n"
