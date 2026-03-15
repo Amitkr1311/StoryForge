@@ -172,6 +172,8 @@ if (pitchForm) {
             clearInterval(coordInterval);
         };
 
+        let termResetTimeout;
+
         try {
             const formData = new FormData(this);
             const response = await fetch('/generate', {
@@ -188,7 +190,7 @@ if (pitchForm) {
                 return;
             }
             
-            setTimeout(() => {
+            termResetTimeout = setTimeout(() => {
                 if (glitchInterval) clearInterval(glitchInterval);
                 if (termIdle) termIdle.style.display = 'none';
                 term.innerHTML = ''; // Start pristine terminal log
@@ -197,10 +199,29 @@ if (pitchForm) {
             const eventSource = new EventSource(`/stream/${data.task_id}`);
             
             eventSource.onmessage = function(event) {
-                const payload = JSON.parse(event.data);
+                let payload;
+                try {
+                    payload = JSON.parse(event.data);
+                } catch (parseErr) {
+                    console.error("SSE Parse Error:", parseErr, event.data);
+                    eventSource.close();
+                    clearTimeout(termResetTimeout);
+                    if (glitchInterval) clearInterval(glitchInterval);
+                    if (termIdle) termIdle.style.display = 'none';
+                    term.innerHTML = '';
+                    termAppendError(term, sanitizeError('Invalid data stream from server.'));
+                    submitBtnEl.disabled = false;
+                    submitBtnEl.textContent = 'GENERATE STORYBOARD';
+                    stopAnimations();
+                    return;
+                }
                 
                 if (payload.status === 'error') {
                     eventSource.close();
+                    clearTimeout(termResetTimeout); // Prevent delayed wipe from erasing error
+                    if (glitchInterval) clearInterval(glitchInterval);
+                    if (termIdle) termIdle.style.display = 'none';
+                    term.innerHTML = '';
                     termAppendError(term, sanitizeError(payload.error));
                     submitBtnEl.disabled = false;
                     submitBtnEl.textContent = 'GENERATE STORYBOARD';
@@ -254,6 +275,10 @@ if (pitchForm) {
             
             eventSource.onerror = function() {
                 eventSource.close();
+                clearTimeout(termResetTimeout); // Prevent delayed wipe from erasing error
+                if (glitchInterval) clearInterval(glitchInterval);
+                if (termIdle) termIdle.style.display = 'none';
+                term.innerHTML = '';
                 termAppendError(term, 'CONNECTION LOST TO BACKGROUND PIPELINE');
                 submitBtnEl.disabled = false;
                 submitBtnEl.textContent = 'GENERATE STORYBOARD';
@@ -261,6 +286,10 @@ if (pitchForm) {
             };
 
         } catch (err) {
+            clearTimeout(termResetTimeout); // Prevent delayed wipe from erasing error
+            if (glitchInterval) clearInterval(glitchInterval);
+            if (termIdle) termIdle.style.display = 'none';
+            term.innerHTML = '';
             termAppendError(term, sanitizeError(err.message));
             submitBtnEl.disabled = false;
             submitBtnEl.textContent = 'GENERATE STORYBOARD';
