@@ -110,18 +110,28 @@ pip install -r requirements.txt
 ```
 
 ### 2. API Key Management
-Create a `.env` file in the project root (next to `app.py`) and add the keys you want to use:
+Create a `.env` file in the project root (next to `app.py`) and add the keys you want to use. You can get your keys from the following official sites:
+
+| Provider | Key Variable | Purpose | Where to get the Key |
+| :--- | :--- | :--- | :--- |
+| **Google Gemini** | `GEMINI_API_KEY` | Semantic extraction & prompt engineering | [Google AI Studio](https://aistudio.google.com/apikey) |
+| **Hugging Face** | `HF_TOKEN` | FLUX.1-schnell image generation (Fast) | [HF Token Settings](https://huggingface.co/settings/tokens) |
+| **Stability AI** | `STABILITY_API_KEY` | Stable Diffusion 3.5 generation | [Stability AI Dashboard](https://platform.stability.ai/account/keys) |
+| **Stable Horde** | `STABLE_HORDE_KEY` | Free community-driven generation | [Stable Horde Site](https://stablehorde.net) |
+
+Add them to your `.env` file like this:
 
 ```bash
-GEMINI_API_KEY=your_gemini_key_here        # Enables LLM segmentation + prompt engineering
-HF_TOKEN=your_huggingface_token_here       # Enables Hugging Face / FLUX provider
-STABILITY_API_KEY=your_stability_key_here  # Enables Stability AI provider
+GEMINI_API_KEY=your_gemini_key_here
+HF_TOKEN=your_huggingface_token_here
+STABILITY_API_KEY=your_stability_key_here
+STABLE_HORDE_KEY=optional_key_here
 ```
 
-Notes:
-- If `GEMINI_API_KEY` is missing, the app will fall back to purely rule-based prompts and NLTK/spaCy segmentation.
-- If `HF_TOKEN` or `STABILITY_API_KEY` are missing, those providers will simply show as unavailable in the UI.
-- `Stable Horde` is always available and does not require any API key.
+**Notes:**
+- If `GEMINI_API_KEY` is missing, the app will fall back to basic rule-based prompts.
+- If `HF_TOKEN` or `STABILITY_API_KEY` are missing, those providers will be deactivated in the UI.
+- `Stable Horde` is free and works without a key, but a key grants higher priority in the generation queue.
 
 ### 3. Execution
 Run the development server natively:
