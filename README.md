@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="static/logo.png" width="300" alt="StoryForge Logo">
+</p>
+
 # 🪄 StoryForge (Pitch Visualizer)
 
 Turn plain business narratives into beautiful, cohesive 3-5 panel visual storyboards instantly.
@@ -35,7 +39,7 @@ graph TD
     API --> Queue["Backend: Initialize Task ID"]:::backend
     Queue --> Segmenter["Semantic Extractor<br/>(segmenter.py)"]:::backend
     
-    Segmenter -- "Gemini 1.5 Flash" --> ExtractContext["Extract Global Context & Action Beats"]:::llm
+    Segmenter -- "Gemini 3.1 Flash Lite Preview" --> ExtractContext["Extract Global Context & Action Beats"]:::llm
     ExtractContext --> Prompter["Prompt Anchoring Layer<br/>(gemini.py)"]:::backend
     
     Prompter -- "Apply Style & Emotion" --> BuildPrompts["Final Image Prompts"]:::backend
