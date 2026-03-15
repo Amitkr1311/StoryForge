@@ -55,6 +55,49 @@ if (textArea) {
     textArea.addEventListener('input', updateCount);
 }
 
+/**
+ * Safely appends an error row to the terminal without using innerHTML on untrusted strings.
+ */
+function termAppendError(term, message) {
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-2 mt-1 text-primary';
+
+    const label = document.createElement('span');
+    label.className = 'font-bold';
+    label.textContent = 'ERROR:';
+
+    const text = document.createElement('span');
+    text.textContent = message;
+
+    row.appendChild(label);
+    row.appendChild(text);
+    term.appendChild(row);
+    term.scrollTop = term.scrollHeight;
+}
+
+/**
+ * Safely appends a status line to the terminal.
+ * Returns the created row element so callers can mutate it.
+ */
+function termAppendLine(term, message, extraClass = '') {
+    const row = document.createElement('div');
+    row.className = `flex items-center gap-2 mt-1 term-line ${extraClass}`.trim();
+
+    const dot = document.createElement('span');
+    dot.className = 'animate-pulse';
+    dot.textContent = '●';
+
+    const text = document.createElement('span');
+    text.className = 'flex-1';
+    text.textContent = message;
+
+    row.appendChild(dot);
+    row.appendChild(text);
+    term.appendChild(row);
+    term.scrollTop = term.scrollHeight;
+    return row;
+}
+
 const pitchForm = document.getElementById('pitch-form');
 if (pitchForm) {
     pitchForm.addEventListener('submit', async function(e) {
@@ -97,8 +140,10 @@ if (pitchForm) {
         const icon = grid.querySelector('.plate-icon');
         const scanBar = grid.querySelector('.scan-bar');
         const coordVal = document.getElementById('val-1');
-        
-        grid.classList.remove('opacity-30');
+
+        // Capture and remove whatever idle opacity class is currently set
+        const idleOpacityClass = [...grid.classList].find(c => c.startsWith('opacity-') && c !== 'opacity-100') || 'opacity-50';
+        grid.classList.remove(idleOpacityClass);
         grid.classList.add('opacity-100');
         
         if (icon) icon.classList.add('animate-spin');
@@ -113,7 +158,8 @@ if (pitchForm) {
         }, 150);
 
         const stopAnimations = () => {
-            grid.classList.add('opacity-30');
+            grid.classList.remove('opacity-100');
+            grid.classList.add(idleOpacityClass);
             if (icon) icon.classList.remove('animate-spin');
             if (scanBar) {
                 scanBar.classList.remove('animate-scan');
@@ -131,10 +177,9 @@ if (pitchForm) {
             const data = await response.json();
             
             if (!response.ok) {
-                const errMsg = sanitizeError(data.error);
-                term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span class="font-bold">ERROR:</span> <span>${errMsg}</span></div>`;
+                termAppendError(term, sanitizeError(data.error));
                 submitBtnEl.disabled = false;
-                submitBtnEl.innerHTML = `GENERATE STORYBOARD`;
+                submitBtnEl.textContent = 'GENERATE STORYBOARD';
                 stopAnimations();
                 return;
             }
@@ -152,10 +197,9 @@ if (pitchForm) {
                 
                 if (payload.status === 'error') {
                     eventSource.close();
-                    const errMsg = sanitizeError(payload.error);
-                    term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span class="font-bold">ERROR:</span> <span>${errMsg}</span></div>`;
+                    termAppendError(term, sanitizeError(payload.error));
                     submitBtnEl.disabled = false;
-                    submitBtnEl.innerHTML = `GENERATE STORYBOARD`;
+                    submitBtnEl.textContent = 'GENERATE STORYBOARD';
                     stopAnimations();
                     return;
                 }
@@ -195,33 +239,27 @@ if (pitchForm) {
                     const oldPulses = term.querySelectorAll('.animate-pulse');
                     oldPulses.forEach(el => {
                         el.classList.remove('animate-pulse');
-                        if (el.innerText === '●') el.innerText = '○';
+                        if (el.textContent === '●') el.textContent = '○';
                     });
-                    
-                    let highlightClass = payload.status === 'generating' ? 'text-primary' : '';
-                    term.innerHTML += `
-                        <div class="flex items-center gap-2 mt-1 term-line ${highlightClass}">
-                            <span class="animate-pulse">●</span>
-                            <span class="flex-1">${payload.message}</span>
-                        </div>
-                    `;
+
+                    const highlightClass = payload.status === 'generating' ? 'text-primary' : '';
+                    termAppendLine(term, payload.message, highlightClass);
                 }
                 term.scrollTop = term.scrollHeight;
             };
             
             eventSource.onerror = function() {
                 eventSource.close();
-                term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span>CONNECTION LOST TO BACKGROUND PIPELINE</span></div>`;
+                termAppendError(term, 'CONNECTION LOST TO BACKGROUND PIPELINE');
                 submitBtnEl.disabled = false;
-                submitBtnEl.innerHTML = `GENERATE STORYBOARD`;
+                submitBtnEl.textContent = 'GENERATE STORYBOARD';
                 stopAnimations();
             };
 
         } catch (err) {
-            const errMsg = sanitizeError(err.message);
-            term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span class="font-bold">ERROR:</span> <span>${errMsg}</span></div>`;
+            termAppendError(term, sanitizeError(err.message));
             submitBtnEl.disabled = false;
-            submitBtnEl.innerHTML = `GENERATE STORYBOARD`;
+            submitBtnEl.textContent = 'GENERATE STORYBOARD';
             stopAnimations();
         }
     });

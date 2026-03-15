@@ -44,7 +44,7 @@
                 ></textarea>
                 <div class="flex justify-between items-center px-1">
                     <button type="button" onclick="loadSample()" class="font-mono text-[10px] font-bold text-slate-500 hover:text-primary uppercase flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[12px]">Use Sample</span> 
+                        <span class="material-symbols-outlined text-[16px]">bolt</span> Use Sample 
                     </button>
                     <span class="font-mono text-[10px] text-slate-400 font-bold tracking-wider"><span id="char-count">0</span> / 3000 CHARS</span>
                 </div>
@@ -54,26 +54,31 @@
                 <div class="flex flex-col gap-2 flex-1 min-w-[150px]">
                     <label class="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-widest">Visual Style</label>
                     <div class="relative">
-                        <select name="style" class="w-full p-3 bg-white border-3 border-slate-900 font-mono text-xs uppercase font-bold appearance-none cursor-pointer focus:border-primary outline-none">
+                        <select name="style" style="-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-right:3rem;" class="w-full p-3 pr-12 bg-white border-3 border-slate-900 font-mono text-xs uppercase font-bold cursor-pointer focus:border-primary outline-none">
                             {% for s in styles %}
                             <option value="{{ s.id }}">{{ s.emoji }} {{ s.label }}</option>
                             {% endfor %}
                         </select>
-                        <span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-slate-400"></span>
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[20px]">expand_more</span>
                     </div>
                 </div>
 
                 <div class="flex flex-col gap-2 flex-1 min-w-[150px]">
                     <label class="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-widest">Model Engine</label>
                     <div class="relative">
-                        <select name="provider" class="w-full p-3 bg-white border-3 border-slate-900 font-mono text-xs uppercase font-bold appearance-none cursor-pointer focus:border-primary outline-none">
+                        <!-- memory icon on the LEFT -->
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[20px]">memory</span>
+                        <select name="provider" style="-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-left:2.5rem;padding-right:3rem;" class="w-full p-3 bg-white border-3 border-slate-900 font-mono text-xs uppercase font-bold cursor-pointer focus:border-primary outline-none">
                             {% for p in providers %}
-                            <option value="{{ p.id }}" {% if not p.available %}disabled{% endif %}>
+                            <option value="{{ p.id }}"
+                                {% if not p.available %}disabled{% endif %}
+                                {% if p.id == default_provider %}selected{% endif %}>
                                 {{ p.label }} {% if not p.available %}(NOT CONFIGURED){% endif %}
                             </option>
                             {% endfor %}
                         </select>
-                        <span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-slate-400"></span>
+                        <!-- expand_more chevron on the RIGHT -->
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[20px]">expand_more</span>
                     </div>
                 </div>
             </div>
