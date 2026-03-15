@@ -1,0 +1,10 @@
+.newspaper-border { border: 3px solid #111; transition: border-color 0.2s ease; }
+.newspaper-border:hover { border-color: #e7390d; }
+.rule-top-bottom { border-top: 4px solid #111; border-bottom: 4px solid #111; }
+
+@media print {
+    header, footer, .noprint { display: none !important; }
+    .newspaper-border { border: 2px solid #000; break-inside: avoid; }
+    body { background: white !important; }
+    section { break-inside: avoid; margin-bottom: 30px !important; }
+}
