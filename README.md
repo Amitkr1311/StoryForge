@@ -31,29 +31,29 @@ graph TD
     classDef llm fill:#8b5cf6,stroke:#6d28d9,stroke-width:2px,color:#fff;
     classDef imageGen fill:#ec4899,stroke:#be185d,stroke-width:2px,color:#fff;
 
-    UI[Frontend: User Submits Pitch]:::frontend --> API[/POST /generate/]:::backend
-    API --> Queue[Backend: Initialize Task ID]:::backend
-    Queue --> Segmenter[Semantic Extractor<br/>(segmenter.py)]:::backend
+    UI["Frontend: User Submits Pitch"]:::frontend --> API[/"POST /generate/"/]:::backend
+    API --> Queue["Backend: Initialize Task ID"]:::backend
+    Queue --> Segmenter["Semantic Extractor<br/>(segmenter.py)"]:::backend
     
-    Segmenter -- Gemini 1.5 Flash --> ExtractContext[Extract Global Context & Action Beats]:::llm
-    ExtractContext --> Prompter[Prompt Anchoring Layer<br/>(gemini.py)]:::backend
+    Segmenter -- "Gemini 1.5 Flash" --> ExtractContext["Extract Global Context & Action Beats"]:::llm
+    ExtractContext --> Prompter["Prompt Anchoring Layer<br/>(gemini.py)"]:::backend
     
-    Prompter -- Apply Style & Emotion --> BuildPrompts[Final Image Prompts]:::backend
-    BuildPrompts --> ImageEngine[Image Generator Factory]:::backend
+    Prompter -- "Apply Style & Emotion" --> BuildPrompts["Final Image Prompts"]:::backend
+    BuildPrompts --> ImageEngine["Image Generator Factory"]:::backend
     
-    ImageEngine -- Asynchronous REST --> Generators{Select Provider}
-    Generators --> HF[Hugging Face / FLUX]:::imageGen
-    Generators --> SD[Stability AI / SD3.5]:::imageGen
-    Generators --> GH[Stable Horde]:::imageGen
-    Generators --> GM[Gemini Imagen 3]:::imageGen
+    ImageEngine -- "Asynchronous REST" --> Generators{"Select Provider"}
+    Generators --> HF["Hugging Face / FLUX"]:::imageGen
+    Generators --> SD["Stability AI / SD3.5"]:::imageGen
+    Generators --> GH["Stable Horde"]:::imageGen
+    Generators --> GM["Gemini Imagen 3"]:::imageGen
     
-    HF --> SSE[Stream SSE Progress back to Frontend]:::backend
+    HF --> SSE["Stream SSE Progress back to Frontend"]:::backend
     SD --> SSE
     GH --> SSE
     GM --> SSE
     
-    SSE --> UIStream[Frontend Terminal UI Updates]:::frontend
-    SSE --> Render[Final Layout Rendering<br/>(storyboard.html)]:::frontend
+    SSE --> UIStream["Frontend Terminal UI Updates"]:::frontend
+    SSE --> Render["Final Layout Rendering<br/>(storyboard.html)"]:::frontend
 ```
 
 ---
@@ -129,7 +129,7 @@ Open your browser and navigate to `http://localhost:5000`.
 
 1. **Input**: Type a corporate narrative or business pitch into the text box (minimum 3 sentences recommended).
 2. **Style Selection**: Choose your desired visual style (e.g., Cinematic, Digital Art, Corporate Minimal).
-3. **Engine Selection**: Select an Image Engine (e.g., Hugging Face Pro).
+3. **Engine Selection**: Select an Image Engine (e.g., Hugging Face Pro or Stability AI).
 4. **Context Engine**: Keep "SUPERCHARGE PROMPTS (Gemini Flash)" checked to enable anti-hallucination context extraction.
 5. **Generate**: Click **GENERATE STORYBOARD**.
 6. **Watch the Terminal**: The SSE streaming pipeline will update the frontend terminal with live status markers (extracting context, generating panels, etc).
