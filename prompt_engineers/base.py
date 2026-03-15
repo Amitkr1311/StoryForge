@@ -40,8 +40,6 @@ STYLE_SUFFIXES: dict[str, str] = {
         "noir shadow pools, Frank Miller / Mike Mignola style, high-contrast black and white with spot color"
     ),
 
-    # ── Legacy keys (kept for backward compat) ─────────────────────────────
-    # None — all styles now use the new named IDs from app.py
 }
 
 _NEGATIVE_PROMPT = (
