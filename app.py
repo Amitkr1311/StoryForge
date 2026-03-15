@@ -99,19 +99,33 @@ def _run_pipeline(task_id: str, raw_text: str, style: str, provider: str, llm_en
 
         engineer = get_prompt_engineer(style=style, use_llm=llm_enhance)
         total_scenes = len(scenes)
-        prompts = [
-            engineer.enhance(scene, global_context, idx, total_scenes)
-            for idx, scene in enumerate(scenes)
-        ]
+        prompts = []
+
+        # Finer-grained progress updates during prompt engineering so the
+        # system_logs view never appears "stuck" for long periods.
+        for idx, scene in enumerate(scenes):
+            push(
+                "prompting",
+                f"ENGINEERING PROMPTS... [IN PROGRESS] (Scene {idx + 1}/{total_scenes})",
+            )
+            prompt = engineer.enhance(scene, global_context, idx, total_scenes)
+            prompts.append(prompt)
 
         push("prompting", "ENGINEERING PROMPTS... [OK]")
 
+        # Initial generation status so the user sees that we are moving past
+        # prompt engineering into image synthesis.
         push("generating", f"GENERATING HIGH-FI IMAGES... (Panel 0/{total_scenes})")
         generator = get_generator(provider)
         panels = []
 
         for idx, (scene, prompt) in enumerate(zip(scenes, prompts)):
-            push("generating", f"GENERATING HIGH-FI IMAGES... (Panel {idx + 1}/{total_scenes})")
+            # Per-panel updates keep the log stream active while external
+            # image APIs do their work.
+            push(
+                "generating",
+                f"GENERATING HIGH-FI IMAGES... (Panel {idx + 1}/{total_scenes})",
+            )
             image_data = generator.generate(prompt, index=idx)
             panels.append({
                 "number":    idx + 1,

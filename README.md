@@ -91,8 +91,7 @@ sequenceDiagram
     Dev->>Term: python -m venv venv
     Dev->>Term: source venv/bin/activate (or venv\Scripts\activate)
     Dev->>Term: pip install -r requirements.txt
-    Dev->>Term: cp .env.example .env
-    Dev->>IDE: Update Keys in .env (GEMINI_API_KEY, HF_TOKEN, etc.)
+    Dev->>IDE: Create .env and add keys (GEMINI_API_KEY, HF_TOKEN, etc.)
     Dev->>Term: python app.py
     Flask-->>Dev: Running on http://localhost:5000
 ```
@@ -111,14 +110,18 @@ pip install -r requirements.txt
 ```
 
 ### 2. API Key Management
-Copy the example environment file:
+Create a `.env` file in the project root (next to `app.py`) and add the keys you want to use:
+
 ```bash
-cp .env.example .env
+GEMINI_API_KEY=your_gemini_key_here        # Enables LLM segmentation + prompt engineering
+HF_TOKEN=your_huggingface_token_here       # Enables Hugging Face / FLUX provider
+STABILITY_API_KEY=your_stability_key_here  # Enables Stability AI provider
 ```
-Open `.env` and fill out your keys:
-- `GEMINI_API_KEY`: Required for LLM Context Extraction and Prompt Engineering (Free Tier available).
-- `HF_TOKEN`: Required for HuggingFace fast image generation (FLUX.1-schnell).
-- `STABILITY_API_KEY`: Optional, required only if using Stable Diffusion 3.5.
+
+Notes:
+- If `GEMINI_API_KEY` is missing, the app will fall back to purely rule-based prompts and NLTK/spaCy segmentation.
+- If `HF_TOKEN` or `STABILITY_API_KEY` are missing, those providers will simply show as unavailable in the UI.
+- `Stable Horde` is always available and does not require any API key.
 
 ### 3. Execution
 Run the development server natively:
