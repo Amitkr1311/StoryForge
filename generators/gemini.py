@@ -4,7 +4,7 @@ Google Gemini 3.1 Flash Lite Preview Image Generation
 Get your free API key at: https://aistudio.google.com/apikey
 Set GEMINI_API_KEY in your .env file.
 
-Requires: pip install google-genai
+Requires: pip install -U google-genai
 """
 
 import os
@@ -16,6 +16,8 @@ from generators.base import BaseImageGenerator
 class GeminiGenerator(BaseImageGenerator):
     """Gemini 3.1 Flash Lite Preview image generation via Google AI Studio."""
 
+    # As of March 2026 the correct model id is:
+    #   gemini-3.1-flash-lite-preview
     _MODEL = "gemini-3.1-flash-lite-preview"
 
     def generate(self, prompt: str, index: int = 0) -> dict:

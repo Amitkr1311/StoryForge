@@ -17,10 +17,10 @@ StoryForge is a dynamic, end-to-end pipeline that takes boring corporate text an
 ### 🌟 Key Features & Recent Updates
 - **Dynamic Storyboard Generation**: Automatically extracts 3 to 5 distinct scenes from raw text.
 - **Context Consistency (Anti-Hallucination)**: Extracts a "Global Context" (industry, setting, subjects) to anchor visual generation across all panels to prevent style drift.
-- **Robust Asynchronous Pipeline**: Uses streaming Server-Sent Events (SSE) to provide a real-time, hacker-style terminal UI that updates users on the active state of their background generations.
+- **Robust Asynchronous Pipeline**: Uses streaming Server-Sent Events (SSE) to provide a real-time, cinematic terminal UI that updates users on the active state of their background generations.
 - **Fail-Safe Error Handling**: Prevents UI deadlocks by actively parsing dirty payloads, gracefully shutting down streaming connections on failures, and correctly surfacing accurate provider errors (e.g., Hugging Face `402 Payment Required` vs generic timeouts).
-- **Emotional Arc Mapping**: Adjusts lighting and mood based on the scene's chronological position (e.g., tense openings, triumphant conclusions).
-- **Multiple Image Engines**: Supports Hugging Face (Flux.1), Stable Horde, Stability AI, and Gemini.
+- **Cinematic Arc Mapping**: Adjusts lighting, camera composition, and mood based on the scene's chronological position (e.g., Establishing shots for problems, Close-ups for resolutions).
+- **Multiple Image Engines**: Supports Hugging Face (FLUX.1), Stable Horde, Stability AI (SD 3.5), and Google Gemini (Imagen 3).
 
 ---
 
@@ -39,7 +39,7 @@ graph TD
     API --> Queue["Backend: Initialize Task ID"]:::backend
     Queue --> Segmenter["Semantic Extractor<br/>(segmenter.py)"]:::backend
     
-    Segmenter -- "Gemini 3.1 Flash Lite Preview" --> ExtractContext["Extract Global Context & Action Beats"]:::llm
+    Segmenter -- "Gemini 1.5 Flash" --> ExtractContext["Extract Global Context & Action Beats"]:::llm
     ExtractContext --> Prompter["Prompt Anchoring Layer<br/>(gemini.py)"]:::backend
     
     Prompter -- "Apply Style & Emotion" --> BuildPrompts["Final Image Prompts"]:::backend

@@ -1,86 +1,128 @@
+"""
+prompt_engineers/gemini.py
+LLM-powered prompt engineer using Google Gemini.
+Falls back to RuleBasedPromptEngineer on any failure.
+"""
+
 import os
 import traceback
-from .base import BasePromptEngineer, STYLE_SUFFIXES
+from .base import (
+    BasePromptEngineer,
+    STYLE_SUFFIXES,
+    PANEL_COMPOSITIONS,
+    ARC_TONES,
+    arc_slot,
+)
 from .rule_based import RuleBasedPromptEngineer
+
 
 class GeminiPromptEngineer(BasePromptEngineer):
     """
-    LLM-powered prompt engineer using Google Gemini 3.1 Flash Lite
-    to craft cinematic prompts with creative director meta-prompts.
+    LLM-powered prompt engineer using Gemini 3.1 Flash Lite Preview.
+    Uses a 3-layer structured prompt:
+      Layer 1 — Global context anchor
+      Layer 2 — Scene beat with arc tone and composition
+      Layer 3 — Style suffix
+
+    Falls back silently to RuleBasedPromptEngineer on any error.
     """
 
-    def __init__(self, style: str = "cinematic"):
+    # As of March 2026 the correct model id is:
+    #   gemini-3.1-flash-lite-preview
+    _MODEL = "gemini-3.1-flash-lite-preview"
+
+    def __init__(self, style: str = "cinematic_film_noir"):
         super().__init__(style)
-        self.api_key = os.getenv("GEMINI_API_KEY")
+        self.api_key   = os.getenv("GEMINI_API_KEY")
         self._fallback = RuleBasedPromptEngineer(style)
-        
+        self._client   = None
+
         if self.api_key:
             try:
                 from google import genai
                 self._client = genai.Client(api_key=self.api_key)
             except ImportError:
-                self.api_key = None  # graceful degradation
+                print("[GeminiPromptEngineer] google-genai not installed — using rule-based fallback.")
+                self.api_key = None
             except Exception as e:
+                print(f"[GeminiPromptEngineer] Client init failed: {e} — using rule-based fallback.")
                 self.api_key = None
 
-    def enhance(self, sentence: str, global_context: str = "", scene_index: int = 0, total_scenes: int = 1) -> str:
-        """Return an enhanced visual prompt for the given sentence."""
-        if not self.api_key:
+    def enhance(
+        self,
+        sentence: str,
+        global_context: str = "",
+        scene_index: int = 0,
+        total_scenes: int = 1,
+    ) -> str:
+        """
+        Return an enhanced visual prompt.
+        Uses Gemini if available, otherwise falls back to rule-based.
+        """
+        if not self.api_key or not self._client:
             return self._fallback.enhance(sentence, global_context, scene_index, total_scenes)
 
+        from google.genai import errors
         try:
             return self._llm_enhance(sentence, global_context, scene_index, total_scenes)
-        except Exception as e:
-            # Fall back to rule-based on any LLM failure
+        except errors.APIError:
             traceback.print_exc()
+            print("[GeminiPromptEngineer] LLM call failed — falling back to rule-based.")
             return self._fallback.enhance(sentence, global_context, scene_index, total_scenes)
 
-    def _llm_enhance(self, sentence: str, global_context: str, scene_index: int, total_scenes: int) -> str:
+    def _llm_enhance(
+        self,
+        sentence: str,
+        global_context: str,
+        scene_index: int,
+        total_scenes: int,
+    ) -> str:
         """
-        Send the sentence to Gemini 3.1 Flash Lite with a director-style meta-prompt.
-        Implements anchored context layers, dynamic emotional curves, and literal translation limits.
+        Build a grounded, arc-aware image generation prompt via Gemini.
+        Single arc slot drives both emotional tone and camera composition
+        to prevent desync between the two.
         """
+        from google.genai import types
+
         style_suffix = STYLE_SUFFIXES[self.style]
 
-        # Fix 4: Calculate Dynamic Emotional Tone
-        progress = (scene_index + 1) / max(total_scenes, 1)
-        if progress <= 0.34:
-            emotional_tone = "tense, heavy, presenting a real and visible problem"
-        elif progress <= 0.67:
-            emotional_tone = "transitional, focused effort, cautious momentum"
-        else:
-            emotional_tone = "resolved, expansive, triumphant, successful completion"
+        # Single source of truth for arc position
+        slot           = arc_slot(scene_index, total_scenes)
+        emotional_tone = ARC_TONES[slot]
+        composition    = PANEL_COMPOSITIONS[slot]
 
         system_msg = (
             "You are a strict, literal visual translation script supervisor. "
-            "Your task is to draft exactly ONE paragraph (60–80 words) describing an image rendering prompt. "
-            "CRITICAL RULES: \n"
-            "1. NEVER invent characters, objects, or environments that are not explicitly stated in the context or text. "
-            "2. Anchor every element in the provided Global Context. The characters and setting must LOOK logically consistent. "
-            "3. Enforce the provided emotional tone mapping in lighting and composition. "
-            "Write the visual description ONLY. No commentary, no preamble."
+            "Your task is to draft exactly ONE paragraph (60–80 words) describing "
+            "an image rendering prompt.\n\n"
+            "CRITICAL RULES:\n"
+            "1. NEVER invent characters, objects, or environments not explicitly "
+            "stated in the Global Context or Scene Beat.\n"
+            "2. Anchor every element in the provided Global Context — "
+            "characters and setting must look consistent with it.\n"
+            "3. Enforce the provided emotional tone through lighting and composition choices.\n"
+            "4. Do not add plot details, emotions, or future states not stated in the scene.\n\n"
+            "Write the visual description ONLY. No commentary, no preamble, no label."
         )
 
         user_msg = (
             "--- LAYER 1: ANCHOR CONTEXT ---\n"
-            f"Global Setting & Subjects: {global_context or 'Standard environment'}\n\n"
+            f"Global Setting & Subjects: {global_context or 'Not specified'}\n\n"
             "--- LAYER 2: SCENE BEAT (LITERAL TRANSLATION ONLY) ---\n"
             f"Current Action: \"{sentence}\"\n"
-            f"Emotional Tone: {emotional_tone}\n\n"
+            f"Emotional Tone: {emotional_tone}\n"
+            f"Camera & Composition: {composition}\n\n"
             "--- LAYER 3: STYLE ---\n"
-            f"Visual Style Requirement (append verbatim at end): {style_suffix}\n\n"
+            f"Visual Style (append verbatim at end): {style_suffix}\n\n"
             "Write the conservative image generation prompt now:"
         )
 
-        from google.genai import types
-
-        # Fix 5: Lower Temperature (0.35 forces literal mapping over embellishment)
         response = self._client.models.generate_content(
-            model="gemini-3.1-flash-lite-preview",
+            model=self._MODEL,
             contents=user_msg,
             config=types.GenerateContentConfig(
                 system_instruction=system_msg,
-                temperature=0.35,
+                temperature=0.35,       # low = literal, faithful to source
                 max_output_tokens=200,
             )
         )
