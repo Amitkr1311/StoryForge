@@ -137,14 +137,18 @@ if (pitchForm) {
 
         // Animated Latent Space Dashboard
         const grid = document.getElementById('plates-grid');
-        const icon = grid.querySelector('.plate-icon');
-        const scanBar = grid.querySelector('.scan-bar');
+        if (!grid) {
+            console.warn('plates-grid element not found');
+            // Continue without dashboard animations
+        }
+        const icon = grid?.querySelector('.plate-icon');
+        const scanBar = grid?.querySelector('.scan-bar');
         const coordVal = document.getElementById('val-1');
 
         // Capture and remove whatever idle opacity class is currently set
-        const idleOpacityClass = [...grid.classList].find(c => c.startsWith('opacity-') && c !== 'opacity-100') || 'opacity-50';
-        grid.classList.remove(idleOpacityClass);
-        grid.classList.add('opacity-100');
+        const idleOpacityClass = grid ? [...grid.classList].find(c => c.startsWith('opacity-') && c !== 'opacity-100') || 'opacity-50' : 'opacity-50';
+        grid?.classList.remove(idleOpacityClass);
+        grid?.classList.add('opacity-100');
         
         if (icon) icon.classList.add('animate-spin');
         if (scanBar) {
@@ -158,8 +162,8 @@ if (pitchForm) {
         }, 150);
 
         const stopAnimations = () => {
-            grid.classList.remove('opacity-100');
-            grid.classList.add(idleOpacityClass);
+            grid?.classList.remove('opacity-100');
+            grid?.classList.add(idleOpacityClass);
             if (icon) icon.classList.remove('animate-spin');
             if (scanBar) {
                 scanBar.classList.remove('animate-scan');
