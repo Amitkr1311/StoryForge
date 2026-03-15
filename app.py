@@ -89,7 +89,7 @@ def _run_pipeline(task_id: str, raw_text: str, style: str, provider: str, llm_en
     try:
         push("segmenting", "SEGMENTING NARRATIVE... [IN PROGRESS]")
 
-        global_context, scenes = segment_text(raw_text, max_scenes=6, use_llm=llm_enhance)
+        global_context, scenes = segment_text(raw_text, max_scenes=5, use_llm=llm_enhance)
         if len(scenes) < 2:
             raise ValueError("Could not extract enough scenes. Try a longer narrative with 3–5 sentences.")
 
@@ -155,7 +155,7 @@ def stream(task_id):
 
         while True:
             try:
-                payload = q.get(timeout=60)  # wait up to 60s for next message
+                payload = q.get(timeout=180)  # wait up to 180s for next message
             except queue.Empty:
                 yield f"data: {json.dumps({'status': 'error', 'error': 'Pipeline timed out.'})}\n\n"
                 break

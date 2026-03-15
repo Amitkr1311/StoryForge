@@ -90,33 +90,67 @@ def _llm_segment(text: str, max_scenes: int, api_key: str) -> tuple[str, list[st
     client = genai.Client(api_key=api_key)
 
     system_msg = (
-        "You are an expert storyboard artist and script supervisor. "
-        "Analyze the provided narrative paragraph and produce JSON output with two keys:\n\n"
-        "1. 'global_context': A single concise string describing the unified visual constants "
-        "(the specific industry, physical setting, core subjects, and visual mood). "
-        "This will anchor every image prompt so they look like they belong to the same world.\n"
-        "2. 'scenes': A list of purely semantic story beats (action/state descriptions). "
-        "Split the narrative into distinct visual moments (minimum 2, maximum 5). "
-        "Rewrite nouns into each scene (e.g., turn 'They' into 'The team of engineers') "
-        "so each scene is completely self-contained and visually literal."
-    )
+    "You are an expert storyboard supervisor preparing a visual shooting script. "
+    "Your output must be strictly valid JSON with exactly two keys: "
+    "'global_context' and 'scenes'. No markdown, no code fences, no commentary — "
+    "raw JSON only.\n\n"
+
+    "KEY 1 — 'global_context' (string):\n"
+    "Write a single grounding sentence of 20–35 words that locks in the visual world "
+    "shared by ALL panels. It must specify:\n"
+    "  - The exact physical setting (e.g. 'a cluttered warehouse office with fluorescent lighting')\n"
+    "  - Who the subjects are (e.g. 'a team of three exhausted logistics workers')\n"
+    "  - The industry or domain (e.g. 'small logistics startup')\n"
+    "  - One recurring visual element that ties the panels together "
+    "(e.g. 'spreadsheet-covered monitors')\n"
+    "Do NOT include emotional language, plot summary, or abstract concepts.\n\n"
+
+    "KEY 2 — 'scenes' (array of strings, minimum 2, maximum 5):\n"
+    "Split the narrative into distinct visual moments — each one a single thing "
+    "a camera could capture in a still frame.\n"
+    "Rules for each scene string:\n"
+    "  - Replace ALL pronouns with their specific referents "
+    "(e.g. 'They' → 'The three logistics workers', 'it' → 'the inventory spreadsheet')\n"
+    "  - Write in simple present tense, active voice "
+    "(e.g. 'The manager stares at a screen full of red error flags')\n"
+    "  - Describe only what is LITERALLY VISIBLE — no emotions, no implications, "
+    "no future states, no abstract ideas\n"
+    "  - Each scene must make visual sense without reading any other scene\n"
+    "  - Maximum 25 words per scene\n\n"
+
+    "SPLIT LOGIC — where to cut scenes:\n"
+    "  - Cut when the physical location changes\n"
+    "  - Cut when the emotional state visibly shifts\n"
+    "  - Cut when a new object or person becomes the focus\n"
+    "  - Do NOT cut mid-action or mid-sentence if the visual hasn't changed\n\n"
+
+    "The arc across scenes should move from PROBLEM → STRUGGLE → TURNING POINT → RESOLUTION. "
+    "If the narrative has fewer than 4 beats, collapse adjacent similar states.\n\n"
+
+    "Output format (follow exactly):\n"
+    '{"global_context": "...", "scenes": ["...", "...", "..."]}'
+)
 
     user_msg = f"Narrative text to parse up to {max_scenes} panels max:\n\"{text}\""
 
-    # Use JSON schema constrained output for reliable parsing
-    response = client.models.generate_content(
-        model="gemini-3.1-flash-lite-preview",
-        contents=user_msg,
-        config=types.GenerateContentConfig(
-            system_instruction=system_msg,
-            temperature=0.2, # Very literal constraint
-            response_mime_type="application/json",
-            response_schema={
+    try:
+        # Use JSON schema constrained output for reliable parsing
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=user_msg,
+            config=types.GenerateContentConfig(
+                system_instruction=system_msg,
+                temperature=0.2, # Very literal constraint
+                response_mime_type="application/json",
+                response_schema={
+
                 "type": "OBJECT",
                 "properties": {
                     "global_context": {"type": "STRING"},
                     "scenes": {
                         "type": "ARRAY",
+                        "minItems": 2,
+                        "maxItems": 5,
                         "items": {"type": "STRING"}
                     }
                 },
@@ -124,16 +158,69 @@ def _llm_segment(text: str, max_scenes: int, api_key: str) -> tuple[str, list[st
             }
         )
     )
+    except Exception as e:
+        raise ValueError(f"Gemini API call failed during segmentation: {e}")
 
-    data = json.loads(response.text)
-    context = data.get("global_context", "")
+    try:
+        return _parse_segmentation_response(response.text, max_scenes=max_scenes, min_scenes=2)
+    except ValueError as e:
+        raise
+
+
+def _parse_segmentation_response(
+    response_text: str,
+    max_scenes: int = 5,
+    min_scenes: int = 2
+) -> tuple[str, list[str]]:
+    
+    # ── 1. Parse JSON safely ───────────────────────────────────
+    try:
+        data = json.loads(response_text)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Gemini returned invalid JSON: {e}")
+
+    # ── 2. Extract with fallbacks ──────────────────────────────
+    context = data.get("global_context", "").strip()
     scenes  = data.get("scenes", [])
 
-    # Enforcement clamping if LLM hallucinated too many list items
+    # ── 3. Validate global_context ────────────────────────────
+    if not context:
+        raise ValueError(
+            "Gemini returned an empty global_context. "
+            "Try rephrasing your narrative."
+        )
+
+    # ── 4. Validate scenes is actually a list ─────────────────
+    if not isinstance(scenes, list):
+        raise ValueError(
+            f"Expected 'scenes' to be a list, got {type(scenes).__name__}."
+        )
+
+    # ── 5. Clean individual scenes ────────────────────────────
+    scenes = [s.strip() for s in scenes if isinstance(s, str) and s.strip()]
+
+    # ── 6. Remove near-duplicates ─────────────────────────────
+    seen   = set()
+    unique = []
+    for scene in scenes:
+        key = scene[:40].lower()   # compare first 40 chars
+        if key not in seen:
+            seen.add(key)
+            unique.append(scene)
+    scenes = unique
+
+    # ── 7. Enforce min / max bounds ───────────────────────────
+    if len(scenes) < min_scenes:
+        raise ValueError(
+            f"Only {len(scenes)} usable scene(s) extracted — "
+            f"need at least {min_scenes}. Try a longer narrative."
+        )
+
     if len(scenes) > max_scenes:
         scenes = _clamp(scenes, max_scenes)
 
     return context, scenes
+
 
 
 # ─── Fallback Tokenisers ──────────────────────────────────────────────────────
