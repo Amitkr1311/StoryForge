@@ -1,49 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Storyboard — StoryForge V2.0</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,400;1,700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-    
-    <script id="tailwind-config">
-        tailwind.config = {
-          darkMode: "class",
-          theme: {
-            extend: {
-              colors: {
-                "primary": "#e7390d",
-                "background-light": "#F7F4EE",
-                "background-dark": "#111111",
-              },
-              fontFamily: {
-                "display": ["Inter", "sans-serif"],
-                "serif": ["Playfair Display", "serif"],
-                "mono": ["JetBrains Mono", "monospace"],
-                "bebas": ["Bebas Neue", "sans-serif"]
-              },
-              borderRadius: {"none": "0", "DEFAULT": "0", "lg": "0", "xl": "0", "full": "9999px"},
-            },
-          },
-        }
-    </script>
-    <style>
-        .newspaper-border { border: 3px solid #111; transition: border-color 0.2s ease; }
-        .newspaper-border:hover { border-color: #e7390d; }
-        .rule-top-bottom { border-top: 4px solid #111; border-bottom: 4px solid #111; }
-        
-        @media print {
-            header, footer, .noprint { display: none !important; }
-            .newspaper-border { border: 2px solid #000; break-inside: avoid; }
-            body { background: white !important; }
-            section { break-inside: avoid; margin-bottom: 30px !important; }
-        }
-    </style>
-</head>
-<body class="bg-background-light font-display text-slate-900 min-h-screen selection:bg-primary/30 selection:text-primary">
+{% extends "base.html" %}
 
+{% block title %}Storyboard — StoryForge V2.0{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/storyboard.css') }}">
+{% endblock %}
+
+{% block content %}
 <div class="max-w-[1200px] mx-auto px-6 py-10 flex flex-col min-h-screen">
     
     <!-- Header -->
@@ -53,145 +16,193 @@
         </div>
         <div class="flex items-center gap-6">
             <button onclick="window.print()" class="group flex items-center gap-2 font-mono text-xs uppercase tracking-widest hover:text-primary transition-colors text-slate-900">
-                <span class="material-symbols-outlined text-[18px]">print</span>
+                <span class="material-symbols-outlined text-[18px]"></span>
                 EXPORT PDF
             </button>
             <button onclick="copyAllPrompts()" id="copy-btn-top" class="group flex items-center gap-2 font-mono text-xs uppercase tracking-widest hover:text-primary transition-colors text-slate-900">
-                <span class="material-symbols-outlined text-[18px]">content_copy</span>
-                COPY PROMPTS
+                <span class="material-symbols-outlined text-[18px]"></span>
+                COPY ALL PROMPTS
             </button>
         </div>
     </header>
 
-    <!-- Main Content: Asymmetric Magazine Layout -->
-    <main class="flex flex-col gap-16 flex-1">
+    <!-- Project Meta -->
+    <section class="mb-16">
+        <h2 class="font-bebas text-8xl lg:text-[100px] leading-[0.85] text-slate-900 mb-6 uppercase tracking-tighter">
+            THE<br/>VISION.
+        </h2>
+        <div class="max-w-2xl">
+            <p class="font-serif italic text-2xl text-slate-600 leading-relaxed border-l-4 border-primary pl-6 py-2">
+                "{{ narrative }}"
+            </p>
+        </div>
+    </section>
+
+    <!-- Main Grid Content -->
+    <main class="flex flex-col gap-24">
         {% for panel in panels %}
             {% set idx = loop.index0 %}
 
+            {# Layout logic: Start new section for Panels 1, 2, 4 #}
             {% if idx == 0 %}
-            <section class="relative group">
-                <div class="absolute -top-4 -left-4 z-10 bg-primary text-white font-mono text-xs px-3 py-1 font-bold">01</div>
-                <div class="absolute right-4 bottom-24 opacity-10 font-bebas text-[200px] leading-none pointer-events-none select-none text-slate-900">01</div>
-                <div class="newspaper-border w-full aspect-[4/3] overflow-hidden bg-slate-200 relative">
-                    <img src="{{ panel.image_url }}" alt="Panel {{ panel.number }}" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-red-100 flex-col items-center justify-center hidden img-error">
-                        <span class="material-symbols-outlined text-4xl text-red-500">broken_image</span>
-                        <span class="font-mono text-sm text-red-800 font-bold tracking-widest mt-2 uppercase">Image Unavailable</span>
+                <!-- SECTION 1: HERO PANEL -->
+                <section class="flex flex-col md:flex-row gap-12 items-start">
+                    <div class="group relative w-full md:w-[65%]">
+                        <div class="absolute -top-3 -left-3 z-10 bg-primary text-white font-mono text-xs px-2 py-0.5 font-bold">01</div>
+                        <div class="newspaper-border aspect-video overflow-hidden bg-slate-200 relative">
+                            <img src="{{ panel.image_url }}" alt="Panel {{ panel.number }}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-red-100 flex-col items-center justify-center hidden img-error">
+                                <span class="material-symbols-outlined text-3xl text-red-500">broken_image</span>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="font-serif italic text-2xl text-slate-900">"{{ panel.caption }}"</h3>
+                            <details class="group/details mt-2">
+                                <summary class="font-mono text-xs text-primary uppercase font-bold hover:underline tracking-tighter cursor-pointer list-none noprint">
+                                    VIEW PROMPT DETAILS
+                                </summary>
+                                <p class="font-mono text-xs text-slate-600 mt-2 p-3 bg-white border-2 border-slate-900 leading-relaxed break-words prompt-text">
+                                    {{ panel.prompt }}
+                                </p>
+                            </details>
+                        </div>
                     </div>
-                </div>
-                <div class="mt-4 max-w-2xl">
-                    <h3 class="font-serif italic text-2xl leading-tight text-slate-900">"{{ panel.caption }}"</h3>
-                    <details class="group/details mt-2">
-                        <summary class="font-mono text-xs text-primary uppercase font-bold hover:underline tracking-tighter cursor-pointer list-none noprint">
-                            VIEW PROMPT DETAILS
-                        </summary>
-                        <p class="font-mono text-xs text-slate-600 mt-2 p-3 bg-white border-2 border-slate-900 leading-relaxed break-words prompt-text">
-                            {{ panel.prompt }}
-                        </p>
-                    </details>
-                </div>
-            </section>
+                    <div class="flex-1 font-mono text-[10px] text-slate-400 font-bold uppercase tracking-[2px] pt-4 lg:pt-0">
+                        <!-- // SCENE_UID_{{ panel.number }} / {{ panel.number }} of {{ panels|length }}<br/>
+                        // CAMERA: CINEMATIC_WIDE<br/>
+                        // LIGHTING: {{ style }} -->
+                    </div>
+                </section>
 
             {% elif idx == 1 %}
-            <section class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                <div class="group relative">
-                    <div class="absolute -top-3 -left-3 z-10 bg-primary text-white font-mono text-xs px-2 py-0.5 font-bold">02</div>
-                    <div class="newspaper-border aspect-video overflow-hidden bg-slate-200 relative">
-                        <img src="{{ panel.image_url }}" alt="Panel {{ panel.number }}" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-red-100 flex-col items-center justify-center hidden img-error">
-                            <span class="material-symbols-outlined text-3xl text-red-500">broken_image</span>
+                <!-- SECTION 2: DUAL PANELS (2 & 3) -->
+                <section class="grid md:grid-cols-2 gap-12">
+                    <div class="group relative">
+                        <div class="absolute -top-3 -left-3 z-10 bg-primary text-white font-mono text-xs px-2 py-0.5 font-bold">02</div>
+                        <div class="newspaper-border aspect-square overflow-hidden bg-slate-200 relative">
+                            <img src="{{ panel.image_url }}" alt="Panel {{ panel.number }}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-red-100 flex-col items-center justify-center hidden img-error">
+                                <span class="material-symbols-outlined text-3xl text-red-500">broken_image</span>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="font-serif italic text-xl text-slate-900">"{{ panel.caption }}"</h3>
+                            <details class="group/details mt-2">
+                                <summary class="font-mono text-xs text-primary uppercase font-bold hover:underline tracking-tighter cursor-pointer list-none noprint">
+                                    VIEW PROMPT DETAILS
+                                </summary>
+                                <p class="font-mono text-xs text-slate-600 mt-2 p-3 bg-white border-2 border-slate-900 leading-relaxed break-words prompt-text">
+                                    {{ panel.prompt }}
+                                </p>
+                            </details>
                         </div>
                     </div>
-                    <div class="mt-4">
-                        <h3 class="font-serif italic text-xl text-slate-900">"{{ panel.caption }}"</h3>
-                        <details class="group/details mt-2">
-                            <summary class="font-mono text-xs text-primary uppercase font-bold hover:underline tracking-tighter cursor-pointer list-none noprint">
-                                VIEW PROMPT DETAILS
-                            </summary>
-                            <p class="font-mono text-xs text-slate-600 mt-2 p-3 bg-white border-2 border-slate-900 leading-relaxed break-words prompt-text">
-                                {{ panel.prompt }}
-                            </p>
-                        </details>
-                    </div>
-                </div>
 
             {% elif idx == 2 %}
-                <div class="group relative">
-                    <div class="absolute -top-3 -left-3 z-10 bg-primary text-white font-mono text-xs px-2 py-0.5 font-bold">03</div>
-                    <div class="newspaper-border aspect-video overflow-hidden bg-slate-200 relative">
-                        <img src="{{ panel.image_url }}" alt="Panel {{ panel.number }}" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-red-100 flex-col items-center justify-center hidden img-error">
-                            <span class="material-symbols-outlined text-3xl text-red-500">broken_image</span>
+                    <div class="group relative mt-12 md:mt-24">
+                        <div class="absolute -top-3 -left-3 z-10 bg-primary text-white font-mono text-xs px-2 py-0.5 font-bold">03</div>
+                        <div class="newspaper-border aspect-square overflow-hidden bg-slate-200 relative">
+                            <img src="{{ panel.image_url }}" alt="Panel {{ panel.number }}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-red-100 flex-col items-center justify-center hidden img-error">
+                                <span class="material-symbols-outlined text-3xl text-red-500">broken_image</span>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="font-serif italic text-xl text-slate-900">"{{ panel.caption }}"</h3>
+                            <details class="group/details mt-2">
+                                <summary class="font-mono text-xs text-primary uppercase font-bold hover:underline tracking-tighter cursor-pointer list-none noprint">
+                                    VIEW PROMPT DETAILS
+                                </summary>
+                                <p class="font-mono text-xs text-slate-600 mt-2 p-3 bg-white border-2 border-slate-900 leading-relaxed break-words prompt-text">
+                                    {{ panel.prompt }}
+                                </p>
+                            </details>
                         </div>
                     </div>
-                    <div class="mt-4">
-                        <h3 class="font-serif italic text-xl text-slate-900">"{{ panel.caption }}"</h3>
-                        <details class="group/details mt-2">
-                            <summary class="font-mono text-xs text-primary uppercase font-bold hover:underline tracking-tighter cursor-pointer list-none noprint">
-                                VIEW PROMPT DETAILS
-                            </summary>
-                            <p class="font-mono text-xs text-slate-600 mt-2 p-3 bg-white border-2 border-slate-900 leading-relaxed break-words prompt-text">
-                                {{ panel.prompt }}
-                            </p>
-                        </details>
-                    </div>
-                </div>
-            </section>
+                </section>
 
             {% elif idx == 3 %}
-            <section class="flex flex-col md:flex-row gap-12">
-                <div class="group relative md:w-[60%]">
-                    <div class="absolute -top-3 -left-3 z-10 bg-primary text-white font-mono text-xs px-2 py-0.5 font-bold">04</div>
-                    <div class="newspaper-border aspect-[16/10] overflow-hidden bg-slate-200 relative">
-                        <img src="{{ panel.image_url }}" alt="Panel {{ panel.number }}" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-red-100 flex-col items-center justify-center hidden img-error">
-                            <span class="material-symbols-outlined text-3xl text-red-500">broken_image</span>
+                <!-- SECTION 3: OFFSET DUAL (4 & 5 or just 4) -->
+                <section class="flex flex-col md:flex-row gap-12 items-end">
+                    <div class="group relative md:w-[50%]">
+                        <div class="absolute -top-3 -left-3 z-10 bg-primary text-white font-mono text-xs px-2 py-0.5 font-bold">04</div>
+                        <div class="newspaper-border aspect-video overflow-hidden bg-slate-200 relative">
+                            <img src="{{ panel.image_url }}" alt="Panel {{ panel.number }}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-red-100 flex-col items-center justify-center hidden img-error">
+                                <span class="material-symbols-outlined text-3xl text-red-500">broken_image</span>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="font-serif italic text-xl text-slate-900">"{{ panel.caption }}"</h3>
+                            <details class="group/details mt-2">
+                                <summary class="font-mono text-xs text-primary uppercase font-bold hover:underline tracking-tighter cursor-pointer list-none noprint">
+                                    VIEW PROMPT DETAILS
+                                </summary>
+                                <p class="font-mono text-xs text-slate-600 mt-2 p-3 bg-white border-2 border-slate-900 leading-relaxed break-words prompt-text">
+                                    {{ panel.prompt }}
+                                </p>
+                            </details>
                         </div>
                     </div>
-                    <div class="mt-4">
-                        <h3 class="font-serif italic text-xl text-slate-900">"{{ panel.caption }}"</h3>
-                        <details class="group/details mt-2">
-                            <summary class="font-mono text-xs text-primary uppercase font-bold hover:underline tracking-tighter cursor-pointer list-none noprint">
-                                VIEW PROMPT DETAILS
-                            </summary>
-                            <p class="font-mono text-xs text-slate-600 mt-2 p-3 bg-white border-2 border-slate-900 leading-relaxed break-words prompt-text">
-                                {{ panel.prompt }}
-                            </p>
-                        </details>
-                    </div>
-                </div>
 
             {% elif idx == 4 %}
-                <div class="group relative md:w-[40%] text-right">
-                    <div class="absolute -top-3 -right-3 z-10 bg-primary text-white font-mono text-xs px-2 py-0.5 font-bold">05</div>
-                    <div class="newspaper-border aspect-square overflow-hidden bg-slate-200 relative">
-                        <img src="{{ panel.image_url }}" alt="Panel {{ panel.number }}" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-red-100 flex-col items-center justify-center hidden img-error">
-                            <span class="material-symbols-outlined text-3xl text-red-500">broken_image</span>
+                    <div class="group relative md:w-[40%] text-right">
+                        <div class="absolute -top-3 -right-3 z-10 bg-primary text-white font-mono text-xs px-2 py-0.5 font-bold">05</div>
+                        <div class="newspaper-border aspect-square overflow-hidden bg-slate-200 relative">
+                            <img src="{{ panel.image_url }}" alt="Panel {{ panel.number }}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-red-100 flex-col items-center justify-center hidden img-error">
+                                <span class="material-symbols-outlined text-3xl text-red-500">broken_image</span>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="font-serif italic text-xl text-slate-900 text-left">"{{ panel.caption }}"</h3>
+                            <details class="group/details mt-2 text-left">
+                                <summary class="font-mono text-xs text-primary uppercase font-bold hover:underline tracking-tighter cursor-pointer list-none noprint">
+                                    VIEW PROMPT DETAILS
+                                </summary>
+                                <p class="font-mono text-xs text-slate-600 mt-2 p-3 bg-white border-2 border-slate-900 leading-relaxed break-words prompt-text">
+                                    {{ panel.prompt }}
+                                </p>
+                            </details>
                         </div>
                     </div>
-                    <div class="mt-4">
-                        <h3 class="font-serif italic text-xl text-slate-900 text-left">"{{ panel.caption }}"</h3>
-                        <details class="group/details mt-2 text-left">
-                            <summary class="font-mono text-xs text-primary uppercase font-bold hover:underline tracking-tighter cursor-pointer list-none noprint">
-                                VIEW PROMPT DETAILS
-                            </summary>
-                            <p class="font-mono text-xs text-slate-600 mt-2 p-3 bg-white border-2 border-slate-900 leading-relaxed break-words prompt-text">
-                                {{ panel.prompt }}
-                            </p>
-                        </details>
+                </section>
+
+            {% elif idx == 5 %}
+                <!-- SECTION 4: THE TECHNICAL FINALE (Panel 6) -->
+                <section class="flex flex-col md:flex-row gap-12 items-center border-t-2 border-slate-900 pt-12">
+                    <div class="flex-1 font-mono text-[10px] text-slate-400 font-bold uppercase tracking-[2px]">
+                        // FINAL_OUTPUT_VALIDATION<br/>
+                        // PIPELINE: STORYFORGE_V2<br/>
+                        // STATUS: RENDERED_OK
                     </div>
-                </div>
-            </section>
+                    <div class="group relative md:w-[65%]">
+                        <div class="absolute -top-3 -left-3 z-10 bg-primary text-white font-mono text-xs px-2 py-0.5 font-bold">06</div>
+                        <div class="newspaper-border aspect-video overflow-hidden bg-slate-200 relative">
+                            <img src="{{ panel.image_url }}" alt="Panel {{ panel.number }}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-red-100 flex-col items-center justify-center hidden img-error">
+                                <span class="material-symbols-outlined text-3xl text-red-500">broken_image</span>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="font-serif italic text-2xl text-slate-900">"{{ panel.caption }}"</h3>
+                            <details class="group/details mt-2">
+                                <summary class="font-mono text-xs text-primary uppercase font-bold hover:underline tracking-tighter cursor-pointer list-none noprint">
+                                    VIEW PROMPT DETAILS
+                                </summary>
+                                <p class="font-mono text-xs text-slate-600 mt-2 p-3 bg-white border-2 border-slate-900 leading-relaxed break-words prompt-text">
+                                    {{ panel.prompt }}
+                                </p>
+                            </details>
+                        </div>
+                    </div>
+                </section>
             {% endif %}
 
             {% if loop.last %}
                 <!-- Ensure unclosed sections are closed -->
-                {% if panels|length == 2 %}
-                    <!-- Closing section for panels 2 & 3 (missing panel 3) -->
-                    </section>
-                {% elif panels|length == 4 %}
-                    <!-- Closing section for panels 4 & 5 (missing panel 5) -->
+                {% if panels|length == 2 or panels|length == 4 %}
+                    <!-- Closing section for Dual or Offset Dual if second panel is missing -->
                     </section>
                 {% endif %}
             {% endif %}
@@ -216,42 +227,8 @@
         </div>
     </footer>
 </div>
+{% endblock %}
 
-<script>
-    // Handle broken images
-    document.querySelectorAll('img').forEach(img => {
-        img.onerror = function() {
-            this.style.display = 'none';
-            var errorDiv = this.parentElement.querySelector('.img-error');
-            if(errorDiv) errorDiv.style.display = 'flex';
-        }
-    });
-
-    function copyAllPrompts() {
-        const prompts = [...document.querySelectorAll('.prompt-text')]
-          .map((el, i) => `PANEL ${i + 1}:\n${el.textContent.trim()}`)
-          .join('\n\n---\n\n');
-
-        navigator.clipboard.writeText(prompts).then(() => {
-          const btnTop = document.getElementById('copy-btn-top');
-          const btnBot = document.getElementById('copy-btn-bot');
-          const origHTMLTop = btnTop.innerHTML;
-          const origHTMLBot = btnBot.innerHTML;
-          
-          btnTop.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span> COPIED!';
-          btnBot.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span> COPIED!';
-          
-          btnTop.style.color = '#e7390d';
-          btnBot.style.color = '#e7390d';
-          
-          setTimeout(() => {
-            btnTop.innerHTML = origHTMLTop;
-            btnBot.innerHTML = origHTMLBot;
-            btnTop.style.color = '';
-            btnBot.style.color = '';
-          }, 2000);
-        });
-    }
-</script>
-</body>
-</html>
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/storyboard.js') }}"></script>
+{% endblock %}

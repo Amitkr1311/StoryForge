@@ -31,12 +31,13 @@ _tasks = {}
 def index():
     """Serve the input form."""
     styles = [
-        {"id": "cinematic",    "label": "Cinematic",              "emoji": "🎬"},
-        {"id": "watercolor",   "label": "Watercolor Illustration","emoji": "🎨"},
-        {"id": "digital_art",  "label": "Digital Art",            "emoji": "💻"},
-        {"id": "photorealistic","label": "Photorealistic",         "emoji": "📷"},
-        {"id": "comic",        "label": "Comic Book",             "emoji": "💥"},
-        {"id": "corporate",    "label": "Business Illustration",  "emoji": "📊"},
+        {"id": "cinematic_film_noir",     "label": "Cinematic Film Noir",    "emoji": "🎬"},
+        {"id": "cyberpunk_neon",          "label": "Cyberpunk Neon",         "emoji": "🏙️"},
+        {"id": "vintage_sketchbook",      "label": "Vintage Sketchbook",     "emoji": "📒"},
+        {"id": "studio_ghibli_watercolor","label": "Ghibli Watercolor",      "emoji": "🎨"},
+        {"id": "high_fashion_editorial",  "label": "Editorial High Fashion", "emoji": "👗"},
+        {"id": "editorial_photography",   "label": "Editorial Photography",  "emoji": "📷"},
+        {"id": "graphic_novel_ink",       "label": "Graphic Novel Ink",      "emoji": "🖋️"},
     ]
     providers = _available_providers()
     return render_template("index.html", styles=styles, providers=providers)
@@ -85,6 +86,7 @@ def _run_pipeline(task_id: str, raw_text: str, style: str, provider: str, llm_en
             raise ValueError("Could not extract enough scenes. Try a longer narrative with 3–5 sentences.")
 
         task["message"] = f"SEGMENTING NARRATIVE... [OK] ({len(scenes)} scenes found)"
+        time.sleep(0.1)
 
         # ── Step 2: Engineer a visual prompt for each scene ───────────────────
         task["status"] = "prompting"
@@ -98,6 +100,7 @@ def _run_pipeline(task_id: str, raw_text: str, style: str, provider: str, llm_en
         ]
 
         task["message"] = "ENGINEERING PROMPTS... [OK]"
+        time.sleep(0.1)
 
         # ── Step 3: Generate an image for each prompt ─────────────────────────
         task["status"] = "generating"
@@ -120,13 +123,13 @@ def _run_pipeline(task_id: str, raw_text: str, style: str, provider: str, llm_en
         task["message"] = "COMPILING STORYBOARD..."
         
         # Render the HTML directly so the frontend can inject it
-        with app.app_context():
+        with app.test_request_context():
             final_html = render_template(
                 "storyboard.html",
                 panels=panels,
                 style=style,
                 provider=provider,
-                original_text=raw_text,
+                narrative=raw_text,
             )
             
         task["result"] = final_html
@@ -138,7 +141,8 @@ def _run_pipeline(task_id: str, raw_text: str, style: str, provider: str, llm_en
     except Exception as e:
         app.logger.error(traceback.format_exc())
         task["status"] = "error"
-        task["error"] = "An unexpected error occurred. Check your API keys and try again."
+        # Extract a clean-ish error message from the exception
+        task["error"] = f"System Error: {str(e)}"
 
 
 @app.route("/stream/<task_id>")
@@ -194,10 +198,10 @@ def health():
 def _available_providers() -> list[dict]:
     """Return which image providers are configured."""
     return [
-        {"id": "huggingface", "label": "FLUX.1-schnell", "available": bool(os.getenv("HF_TOKEN"))},
-        {"id": "gemini",      "label": "Gemini 3.1 Flash Lite Preview", "available": bool(os.getenv("GEMINI_API_KEY"))},
-        {"id": "stability",   "label": "Stable Diffusion 3.5", "available": bool(os.getenv("STABILITY_API_KEY"))},
-        {"id": "stablehorde", "label": "Stable Diffusion (Stable Horde)", "available": True},
+        {"id": "gemini",      "label": "Google Gemini (Dynamic)", "available": bool(os.getenv("GEMINI_API_KEY"))},
+        {"id": "huggingface", "label": "Hugging Face (Pro)", "available": bool(os.getenv("HF_TOKEN"))},
+        {"id": "stability",   "label": "Stability AI (Pro)", "available": bool(os.getenv("STABILITY_API_KEY"))},
+        {"id": "stablehorde", "label": "Stable Horde (Free)", "available": True},
     ]
 
 

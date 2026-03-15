@@ -1,0 +1,43 @@
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.vertical-text { writing-mode: vertical-rl; transform: rotate(180deg); }
+.peer:focus-visible ~ div { outline: 2px solid #e7390d; outline-offset: 2px; }
+
+@keyframes scan {
+    0% { transform: translateY(-100%); opacity: 0; }
+    50% { opacity: 0.5; }
+    100% { transform: translateY(100%); opacity: 0; }
+}
+
+.animate-scan {
+    animation: scan 2s linear infinite;
+}
+
+.technical-grid {
+    background-image: radial-gradient(circle, #475569 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+@keyframes dash-pulse {
+    0% { stroke-dashoffset: 1000; opacity: 0.2; }
+    50% { opacity: 0.5; }
+    100% { stroke-dashoffset: 0; opacity: 0.2; }
+}
+
+.animate-dash-pulse {
+    stroke-dasharray: 1000;
+    animation: dash-pulse 20s linear infinite;
+}
+
+@keyframes flicker {
+    0% { opacity: 1; }
+    5% { opacity: 0.2; }
+    10% { opacity: 1; }
+    15% { opacity: 0.8; }
+    20% { opacity: 1; }
+    100% { opacity: 1; }
+}
+
+.animate-flicker {
+    animation: flicker 4s infinite;
+}

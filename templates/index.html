@@ -1,58 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Storyboard StoryForge V2.0</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap" rel="stylesheet"/>
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#e7390d",
-                        "background-light": "#f7f4ee",
-                        "background-dark": "#111111",
-                    },
-                    fontFamily: {
-                        "display": ["Inter", "sans-serif"],
-                        "bebas": ["Bebas Neue", "sans-serif"],
-                        "playfair": ["Playfair Display", "serif"],
-                        "mono": ["JetBrains Mono", "monospace"],
-                    },
-                    borderWidth: {
-                        '3': '3px',
-                        '4': '4px',
-                    },
-                    borderRadius: {
-                        "none": "0px",
-                        "DEFAULT": "0px",
-                        "lg": "0px",
-                        "xl": "0px",
-                        "full": "9999px",
-                    },
-                },
-            },
-        }
-    </script>
-    <style>
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .vertical-text { writing-mode: vertical-rl; transform: rotate(180deg); }
-        .peer:focus-visible ~ div { outline: 2px solid #e7390d; outline-offset: 2px; }
-    </style>
-</head>
-<body class="bg-background-light font-display text-slate-900 antialiased overflow-x-hidden">
+{% extends "base.html" %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+{% endblock %}
+
+{% block content %}
 <div class="flex flex-col lg:flex-row min-h-screen">
 
     <!-- Left Column (Form, ~55% width) -->
     <main class="w-full lg:w-[55%] p-8 lg:p-16 flex flex-col gap-8 bg-background-light">
         <header class="flex flex-col gap-6">
-            <div class="tracking-[3px] font-mono text-[10px] text-slate-900 font-bold">
-                PITCH VISUALIZER / V2.0
+            <div class="flex items-center gap-4">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Pitch Visualizer Logo" class="h-16 w-auto border-2 border-slate-900 shadow-[4px_4px_0px_0px_rgba(17,17,17,1)]">
+                <div class="tracking-[3px] font-mono text-[10px] text-slate-900 font-bold uppercase">
+                    PITCH VISUALIZER / V2.0
+                </div>
             </div>
             <h1 class="font-bebas text-7xl lg:text-[84px] leading-[0.9] text-slate-900 uppercase">
                 TURN<br/>WORDS<br/>INTO<br/>SCENES.
@@ -70,379 +32,175 @@
         </div>
         {% endif %}
 
-        <form method="POST" action="/generate" id="pitch-form" class="flex flex-col gap-8 mt-4">
-            
-            <!-- Textarea Section -->
+        <form id="pitch-form" class="flex flex-col gap-6">
             <div class="flex flex-col gap-2">
+                <label class="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-widest">PROJECT NARRATIVE</label>
                 <textarea 
+                    id="pitch-text" 
                     name="text" 
-                    id="pitch-text"
-                    required
-                    class="w-full h-48 bg-transparent border-3 border-slate-900 p-6 font-playfair italic text-xl focus:ring-0 focus:border-primary placeholder:text-slate-400" 
-                    placeholder="Paste your pitch narrative here..."
+                    required 
+                    placeholder="Enter your pitch or narrative here..."
+                    class="w-full h-48 lg:h-64 p-6 bg-white border-3 border-slate-900 font-serif text-lg focus:outline-none focus:border-primary transition-colors resize-none placeholder:text-slate-300 peer no-scrollbar"
                 ></textarea>
                 <div class="flex justify-between items-center px-1">
                     <button type="button" onclick="loadSample()" class="font-mono text-[10px] font-bold text-slate-500 hover:text-primary uppercase flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[12px]">auto_awesome</span> Use Sample Lengthy Pitch
+                        <span class="material-symbols-outlined text-[12px]">Use Sample</span> 
                     </button>
                     <span class="font-mono text-[10px] text-slate-400 font-bold tracking-wider"><span id="char-count">0</span> / 3000 CHARS</span>
                 </div>
             </div>
 
-            <!-- Visual Style Selector -->
-            <div class="flex flex-col gap-3">
-                <span class="font-mono text-[11px] font-bold text-primary tracking-wider uppercase">Visual Style</span>
-                <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                    {% for s in styles %}
-                    <label class="cursor-pointer shrink-0">
-                        <input type="radio" name="style" value="{{ s.id }}" class="peer sr-only" {% if loop.first %}checked{% endif %}>
-                        <div class="px-6 py-2 bg-white text-slate-900 border-2 border-slate-900 font-mono text-xs font-bold uppercase hover:bg-slate-100 peer-checked:bg-slate-900 peer-checked:text-white transition-colors">
-                            {{ s.label }}
-                        </div>
-                    </label>
-                    {% endfor %}
+            <div class="flex flex-wrap gap-4 mt-2">
+                <div class="flex flex-col gap-2 flex-1 min-w-[150px]">
+                    <label class="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-widest">Visual Style</label>
+                    <div class="relative">
+                        <select name="style" class="w-full p-3 bg-white border-3 border-slate-900 font-mono text-xs uppercase font-bold appearance-none cursor-pointer focus:border-primary outline-none">
+                            {% for s in styles %}
+                            <option value="{{ s.id }}">{{ s.emoji }} {{ s.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-slate-400"></span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2 flex-1 min-w-[150px]">
+                    <label class="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-widest">Model Engine</label>
+                    <div class="relative">
+                        <select name="provider" class="w-full p-3 bg-white border-3 border-slate-900 font-mono text-xs uppercase font-bold appearance-none cursor-pointer focus:border-primary outline-none">
+                            {% for p in providers %}
+                            <option value="{{ p.id }}" {% if not p.available %}disabled{% endif %}>
+                                {{ p.label }} {% if not p.available %}(NOT CONFIGURED){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-slate-400"></span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Provider Row -->
-            <div class="flex flex-col gap-3">
-                <span class="font-mono text-[11px] font-bold text-primary tracking-wider uppercase">Image Engine Provider</span>
-                <div class="flex flex-wrap gap-3">
-                    {% for p in providers %}
-                    <label class="cursor-pointer">
-                        <input type="radio" name="provider" value="{{ p.id }}" class="peer sr-only" {% if loop.first and p.available %}checked{% endif %} {% if not p.available %}disabled{% endif %}>
-                        <div class="px-6 py-2 font-mono text-xs font-bold uppercase border-2 border-slate-900 bg-white text-slate-900 peer-checked:bg-slate-900 peer-checked:text-white {% if not p.available %}opacity-50 !border-slate-300 !text-slate-400 line-through hover:!bg-white cursor-not-allowed{% else %}hover:bg-slate-100 transition-colors{% endif %}">
-                            {{ p.label }}
-                        </div>
-                    </label>
-                    {% endfor %}
+            <!-- Supercharge / Enhance Button -->
+            <div class="flex items-center gap-4 mt-2">
+                <label class="relative inline-flex items-center cursor-pointer group">
+                    <input type="checkbox" name="llm_enhance" class="sr-only peer">
+                    <div class="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary border-2 border-slate-900"></div>
+                </label>
+                <div class="flex flex-col">
+                    <span class="font-bebas text-lg leading-tight tracking-wide text-slate-900">SUPERCHARGE PROMPTS</span>
+                    <span class="font-mono text-[9px] text-slate-500 uppercase font-bold">Use AI to engineer high-fidelity visual descriptions</span>
                 </div>
             </div>
 
-            <!-- Gemini Prompts Toggle -->
-            <label class="flex items-center gap-4 py-2 cursor-pointer group">
-                <input type="checkbox" name="llm_enhance" value="on" class="peer sr-only">
-                <div class="relative inline-block w-12 h-6 transition duration-300 ease-in-out bg-slate-300 peer-checked:bg-primary border-2 border-slate-900 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:w-4 after:h-4 after:bg-white after:border after:border-slate-900 after:transition-all peer-checked:after:translate-x-[22px]">
-                </div>
-                <span class="font-mono text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-primary transition-colors">SUPERCHARGE PROMPTS</span>
-            </label>
-
-            <!-- Submit Button -->
-            <button type="submit" id="submit-btn" class="w-full h-16 bg-primary border-4 border-slate-900 text-white font-bebas text-3xl flex items-center justify-center gap-4 hover:translate-x-1 hover:-translate-y-1 transition-transform shadow-[4px_4px_0px_0px_rgba(17,17,17,1)] active:shadow-none active:translate-x-0 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed">
-                GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>
+            <button type="submit" id="submit-btn" class="w-full py-6 mt-4 bg-primary text-white font-bebas text-4xl tracking-wider hover:bg-slate-900 transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none uppercase">
+                GENERATE STORYBOARD
             </button>
         </form>
     </main>
 
-    <!-- Right Column (Art/Manifesto, ~45% width) -->
-    <aside class="w-full lg:w-[45%] bg-background-dark min-h-[50vh] lg:min-h-screen relative flex flex-col justify-between overflow-hidden">
-        <!-- Rotated Background Watermark -->
-        <div class="absolute -left-12 top-1/2 -translate-y-1/2 select-none opacity-20 pointer-events-none">
-            <h2 class="font-bebas text-[160px] text-white vertical-text tracking-widest leading-none">
-                STORYBOARD
-            </h2>
+    <!-- Right Column (Preview/Teaser State, ~45% width) -->
+    <aside class="w-full lg:w-[45%] bg-slate-900 relative flex flex-col border-l-4 border-slate-900 p-8 lg:p-12 overflow-hidden">
+        
+        <!-- Environment Data Layer -->
+        <div class="flex justify-between font-mono text-[10px] text-slate-500 uppercase tracking-[2px] font-bold">
+            <span id="tc-counter">TC: 00:12:44:02</span>
+            <span>FPS: <span id="fps-counter">23.976</span></span>
+            <span>REC: PROXY</span>
         </div>
 
-        <!-- Content Area -->
-        <div class="relative z-10 p-12 lg:p-20 flex flex-col h-full justify-between gap-16">
-            <div class="max-w-md ml-auto text-right min-h-[150px] lg:min-h-[200px] flex items-center justify-end">
-                <div class="flex flex-col gap-2">
-                    <span class="font-mono text-[10px] text-primary tracking-[0.3em] font-bold">MANIFESTO / 001</span>
-                    <p id="quote-text" class="font-playfair italic text-3xl lg:text-4xl text-white leading-relaxed transition-opacity duration-1000 opacity-100 w-full">
-                        "A <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">GREAT STORY</span> told badly is still a great story. A great story told visually is <span class="underline decoration-1 underline-offset-8">unforgettable</span>."
-                    </p>
+        <div class="flex-1 flex flex-col justify-center gap-12 py-10">
+            <!-- Latent Space Dashboard / Mapping -->
+            <div id="plates-grid" class="relative flex-1 min-h-[400px] technical-grid opacity-50 transition-all duration-1000 overflow-hidden border border-slate-700">
+                
+                <!-- System Headers -->
+                <div class="absolute top-6 left-6 flex flex-col gap-1">
+                    <div class="text-primary font-mono text-sm font-bold tracking-[2px] animate-flicker">[ SYSTEM_READY ]</div>
+                    <div class="text-slate-400 font-mono text-[9px] font-bold uppercase">V_CORE: 9.8.0.2</div>
                 </div>
+
+                <!-- Central SVG Mapping -->
+                <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-40" viewBox="0 0 400 600">
+                    <path d="M 100 80 L 320 220 L 200 550 Z" fill="none" class="stroke-primary animate-dash-pulse" stroke-width="0.7" />
+                    <circle cx="100" cy="80" r="3" class="fill-primary" />
+                    <circle cx="320" cy="220" r="3" class="fill-primary" />
+                    <circle cx="200" cy="550" r="3" class="fill-primary" />
+                    
+                    <!-- Mapping Lines -->
+                    <line x1="0" y1="300" x2="400" y2="300" class="stroke-slate-700" stroke-width="0.5" stroke-dasharray="2 4" />
+                    <line x1="200" y1="0" x2="200" y2="600" class="stroke-slate-700" stroke-width="0.5" stroke-dasharray="2 4" />
+                </svg>
+
+                <!-- Distrubuted Data Labels -->
+                <div class="absolute top-[120px] right-10 flex gap-3 items-start transform translate-x-4">
+                    <div class="w-[1px] h-12 bg-primary/60"></div>
+                    <div class="flex flex-col gap-1">
+                        <div class="text-slate-200 font-mono text-[10px] uppercase font-bold tracking-widest">PLATE_01</div>
+                        <div class="text-primary font-mono text-[9px] uppercase font-bold">LATENT_SPACE_COORD: <span id="val-1" class="text-white">0.11</span></div>
+                    </div>
+                </div>
+
+                <div class="absolute bottom-[180px] left-8 flex flex-col gap-2">
+                    <div class="w-32 h-[1px] bg-slate-700"></div>
+                    <div class="text-slate-200 font-mono text-[10px] uppercase font-bold tracking-widest">PLATE_02 / GEN_P</div>
+                    <div class="flex gap-1">
+                        <div class="w-3 h-3 bg-primary animate-pulse"></div>
+                        <div class="w-3 h-3 bg-slate-700"></div>
+                        <div class="w-3 h-3 bg-slate-700"></div>
+                    </div>
+                </div>
+
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-4">
+                    <div class="w-14 h-14 border border-primary/50 flex items-center justify-center relative bg-black/60 backdrop-blur-sm">
+                        <span class="material-symbols-outlined text-primary text-2xl plate-icon">query_stats</span>
+                        <div class="absolute inset-0 border border-primary/20 scale-125 animate-pulse"></div>
+                    </div>
+                    <div class="text-slate-200 font-mono text-[10px] uppercase font-bold tracking-widest whitespace-nowrap shadow-black drop-shadow-lg">
+                        PLATE_03 // BIT_MAP_X
+                    </div>
+                </div>
+
+                <div class="absolute bottom-12 right-10 text-right flex flex-col gap-2">
+                    <div class="text-slate-200 font-mono text-[10px] uppercase font-bold tracking-widest">PLATE_04_05_06</div>
+                    <div class="text-slate-400 font-mono text-[10px] uppercase font-bold tracking-[2px]">CLUSTER_PROCESSING_MODE_TRUE</div>
+                </div>
+
+                <!-- Bottom Scanning overlay -->
+                <div class="scan-bar absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent bottom-0 opacity-0 pointer-events-none"></div>
+            </div>
+
+            <!-- Terminal Manifest -->
+            <div class="flex flex-col gap-4 max-w-md mx-auto w-full">
+                <div class="h-[2px] w-full bg-slate-800"></div>
+                <div id="quote-text" class="font-serif italic text-2xl lg:text-3xl text-slate-300 leading-tight transition-opacity duration-1000 opacity-100">
+                    "A <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">GREAT STORY</span> told badly is still a great story. A great story told visually is <span class="underline decoration-1 underline-offset-8">unforgettable</span>."
+                </div>
+                <div class="h-[2px] w-full bg-slate-800"></div>
+            </div>
+        </div>
+
+        <!-- System Logs Dock (The Fake Hacker Terminal) -->
+        <div class="mt-auto bg-black p-4 border-l-2 border-primary/40 min-h-[140px] font-mono text-[11px] leading-relaxed relative flex flex-col box-border">
+            <div class="flex justify-between items-center mb-2 border-b border-slate-800 pb-1">
+                <span class="text-primary font-bold">SYSTEM_LOGS.EXE</span>
+                <span class="text-slate-700">LVL_04</span>
             </div>
             
-            <div class="absolute top-1/2 right-12 -translate-y-1/2 flex flex-col items-end gap-24 opacity-40 pointer-events-none hidden lg:flex">
-                <div class="border-2 border-primary text-primary font-mono text-xs px-4 py-1 rotate-12 font-bold tracking-widest hidden lg:block">CONFIDENTIAL</div>
-                <div class="font-mono text-[10px] text-white flex flex-col items-end">
-                    <span id="tc-counter">TC: 00:12:44:02</span>
-                    <span>FPS: <span id="fps-counter">23.976</span></span>
-                    <span>CAM: ARRI_RAW</span>
+            <div id="loading-terminal" class="flex-1 overflow-y-auto text-slate-300 flex flex-col uppercase no-scrollbar">
+                <div id="term-idle" class="flex items-center gap-2">
+                    <span class="animate-pulse">_</span>
+                    <span id="term-idle-text" class="text-slate-500">WAITING FOR INPUT...</span>
                 </div>
             </div>
 
-            <div class="flex flex-col gap-12 mt-auto">
-                <!-- Placeholder Grid -->
-                <div class="grid grid-cols-3 gap-4 opacity-50 transition-opacity duration-500" id="plates-grid">
-                    <div class="flex flex-col gap-3 group relative cursor-crosshair plate-container">
-                        <div class="aspect-[4/5] bg-[#1a1a1a] border border-white/10 flex items-center justify-center relative overflow-hidden transition-colors group-hover:border-primary/50 plate-box">
-                            <span class="material-symbols-outlined text-white/5 text-4xl plate-icon transition-transform group-hover:scale-110">image</span>
-                            <div class="absolute top-2 left-2 w-2 h-2 border-t border-l border-primary/50"></div>
-                            
-                            <!-- Hover state -->
-                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 to-transparent h-1/2 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-multiply"></div>
-                            <div class="absolute bottom-2 left-2 right-2 text-[8px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity text-center plate-desc z-10">ESTABLISHING SHOT</div>
-                        </div>
-                        <span class="font-mono text-[9px] text-white/40 tracking-tighter">PLATE_01</span>
-                    </div>
-
-                    <div class="flex flex-col gap-3 group relative cursor-crosshair plate-container">
-                        <div class="aspect-[4/5] bg-[#1a1a1a] border border-white/10 flex items-center justify-center relative overflow-hidden transition-colors group-hover:border-primary/50 plate-box">
-                            <span class="material-symbols-outlined text-white/5 text-4xl plate-icon transition-transform group-hover:scale-110">image</span>
-                            <div class="absolute top-2 left-2 w-2 h-2 border-t border-l border-primary/50"></div>
-                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 to-transparent h-1/2 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-multiply"></div>
-                            <div class="absolute bottom-2 left-2 right-2 text-[8px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity text-center plate-desc z-10">CHARACTER INTRO</div>
-                        </div>
-                        <span class="font-mono text-[9px] text-white/40 tracking-tighter">PLATE_02</span>
-                    </div>
-
-                    <div class="flex flex-col gap-3 group relative cursor-crosshair plate-container">
-                        <div class="aspect-[4/5] bg-[#1a1a1a] border border-white/10 flex items-center justify-center relative overflow-hidden transition-colors group-hover:border-primary/50 plate-box">
-                            <span class="material-symbols-outlined text-white/5 text-4xl plate-icon transition-transform group-hover:scale-110">image</span>
-                            <div class="absolute top-2 left-2 w-2 h-2 border-t border-l border-primary/50"></div>
-                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 to-transparent h-1/2 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-multiply"></div>
-                            <div class="absolute bottom-2 left-2 right-2 text-[8px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity text-center plate-desc z-10">ACTION SEQUENCE</div>
-                        </div>
-                        <span class="font-mono text-[9px] text-white/40 tracking-tighter">PLATE_03</span>
-                    </div>
-
-                    <div class="flex flex-col gap-3 group relative cursor-crosshair plate-container">
-                        <div class="aspect-[4/5] bg-[#1a1a1a] border border-white/10 flex items-center justify-center relative overflow-hidden transition-colors group-hover:border-primary/50 plate-box">
-                            <span class="material-symbols-outlined text-white/5 text-4xl plate-icon transition-transform group-hover:scale-110">image</span>
-                            <div class="absolute top-2 left-2 w-2 h-2 border-t border-l border-primary/50"></div>
-                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 to-transparent h-1/2 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-multiply"></div>
-                            <div class="absolute bottom-2 left-2 right-2 text-[8px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity text-center plate-desc z-10">CLIMAX</div>
-                        </div>
-                        <span class="font-mono text-[9px] text-white/40 tracking-tighter">PLATE_04</span>
-                    </div>
-
-                    <div class="flex flex-col gap-3 group relative cursor-crosshair plate-container">
-                        <div class="aspect-[4/5] bg-[#1a1a1a] border border-white/10 flex items-center justify-center relative overflow-hidden transition-colors group-hover:border-primary/50 plate-box">
-                            <span class="material-symbols-outlined text-white/5 text-4xl plate-icon transition-transform group-hover:scale-110">image</span>
-                            <div class="absolute top-2 left-2 w-2 h-2 border-t border-l border-primary/50"></div>
-                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 to-transparent h-1/2 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-multiply"></div>
-                            <div class="absolute bottom-2 left-2 right-2 text-[8px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity text-center plate-desc z-10">ENVIRONMENT</div>
-                        </div>
-                        <span class="font-mono text-[9px] text-white/40 tracking-tighter">PLATE_05</span>
-                    </div>
-
-                    <div class="flex flex-col gap-3 group relative cursor-crosshair plate-container">
-                        <div class="aspect-[4/5] bg-[#1a1a1a] border border-white/10 flex items-center justify-center relative overflow-hidden transition-colors group-hover:border-primary/50 plate-box">
-                            <span class="material-symbols-outlined text-white/5 text-4xl plate-icon transition-transform group-hover:scale-110">image</span>
-                            <div class="absolute top-2 left-2 w-2 h-2 border-t border-l border-primary/50"></div>
-                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 to-transparent h-1/2 opacity-0 group-hover:opacity-100 transition-opacity mix-blend-multiply"></div>
-                            <div class="absolute bottom-2 left-2 right-2 text-[8px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity text-center plate-desc z-10">RESOLUTION</div>
-                        </div>
-                        <span class="font-mono text-[9px] text-white/40 tracking-tighter">PLATE_06</span>
-                    </div>
-                </div>
-
-                <!-- Terminal Log (Hidden until submit) -->
-                <div class="font-mono text-[10px] text-primary/80 flex flex-col gap-1 min-h-[60px]" id="loading-terminal">
-                    <div class="flex flex-col gap-1 opacity-50" id="term-idle">
-                        <div class="flex items-center gap-2">
-                            <span class="animate-pulse">_</span>
-                            <span id="term-idle-text">WAITING FOR INPUT</span>
-                        </div>
-                    </div>
-                </div>
+            <!-- Scanning overlay -->
+            <div class="absolute inset-0 pointer-events-none opacity-10">
+                <div class="w-full h-full bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
             </div>
+            <div class="absolute bottom-0 left-0 w-full h-[3px] bg-primary z-50"></div>
         </div>
-
-        <!-- Absolute Texture/Overlay for "Art" Feel -->
-        <div class="absolute inset-0 opacity-5 pointer-events-none mix-blend-overlay">
-            <div class="w-full h-full bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
-        </div>
-        <div class="absolute bottom-0 left-0 w-full h-[3px] bg-primary z-50"></div>
     </aside>
 
 </div>
+{% endblock %}
 
-<script>
-    const SAMPLE = `A small logistics startup was drowning in manual data-entry errors, losing thousands of dollars weekly and burning out their entire team. They had tried spreadsheets, sticky notes, and three different project management tools — nothing stuck. Then they implemented our AI-powered operations platform, and within two weeks, error rates dropped by 94 percent. Today their team focuses on strategic growth instead of firefighting, and they have successfully scaled to three new cities in just six months.`;
-
-    const textArea = document.getElementById('pitch-text');
-    const charCount = document.getElementById('char-count');
-
-    function updateCount() {
-        const len = textArea.value.length;
-        charCount.textContent = len;
-        charCount.style.color = len > 2800 ? '#e7390d' : '';
-    }
-
-    function loadSample() {
-        textArea.value = SAMPLE;
-        updateCount();
-    }
-
-    textArea.addEventListener('input', updateCount);
-
-    document.getElementById('pitch-form').addEventListener('submit', async function(e) {
-        e.preventDefault(); // Prevent standard POST
-        const text = textArea.value.trim();
-        if (!text) { return; }
-
-        const term = document.getElementById('loading-terminal');
-        const termIdle = document.getElementById('term-idle');
-        const termIdleText = document.getElementById('term-idle-text');
-        
-        const submitBtnEl = document.getElementById('submit-btn');
-        submitBtnEl.disabled = true;
-        submitBtnEl.innerHTML = `GENERATING STORYBOARD... <span class="material-symbols-outlined text-3xl animate-spin">sync</span>`;
-
-        // Matrix Hacker Text Effect for initial terminal loading
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
-        let glitchInterval;
-        if (termIdleText) {
-            let iteration = 0;
-            const targetText = "INITIALIZING_PIPELINE";
-            glitchInterval = setInterval(() => {
-                termIdleText.innerText = targetText.split("")
-                    .map((letter, index) => {
-                        if(index < iteration) {
-                            return targetText[index];
-                        }
-                        return chars[Math.floor(Math.random() * 42)]
-                    })
-                    .join("");
-                if(iteration >= targetText.length){ 
-                    clearInterval(glitchInterval);
-                }
-                iteration += 1 / 3;
-            }, 30);
-        }
-
-        // Animated Plates Grid
-        const grid = document.getElementById('plates-grid');
-        grid.classList.remove('opacity-50');
-        grid.classList.add('opacity-100');
-        const icons = grid.querySelectorAll('.plate-icon');
-        icons.forEach(icon => {
-            icon.textContent = 'sync';
-            icon.classList.add('animate-spin', 'text-primary/70');
-            icon.classList.remove('text-white/5');
-        });
-
-        try {
-            const formData = new FormData(this);
-            const response = await fetch('/generate', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await response.json();
-            
-            if (!response.ok) {
-                term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span class="font-bold">ERROR:</span> <span>${data.error || "Unknown error occurred."}</span></div>`;
-                submitBtnEl.disabled = false;
-                submitBtnEl.innerHTML = `GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>`;
-                return;
-            }
-            
-            setTimeout(() => {
-                if (glitchInterval) clearInterval(glitchInterval);
-                if (termIdle) termIdle.style.display = 'none';
-                term.innerHTML = ''; // Start pristine terminal log
-            }, 1000); // Leave the cool glitch text for 1 sec minimum
-
-            const eventSource = new EventSource(`/stream/${data.task_id}`);
-            
-            eventSource.onmessage = function(event) {
-                const payload = JSON.parse(event.data);
-                
-                if (payload.status === 'error') {
-                    eventSource.close();
-                    term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span class="font-bold">ERROR:</span> <span>${payload.error}</span></div>`;
-                    submitBtnEl.disabled = false;
-                    submitBtnEl.innerHTML = `GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>`;
-                    return;
-                }
-                
-                if (payload.status === 'complete') {
-                    eventSource.close();
-                    document.open();
-                    document.write(payload.html);
-                    document.close();
-                    return;
-                }
-                
-                // Track terminal contents to avoid duplicated entries if the status string didn't actually change
-                const lines = term.querySelectorAll('.term-line');
-                const lastLine = lines.length > 0 ? lines[lines.length - 1].innerText : "";
-                
-                if (!lastLine.includes(payload.message)) {
-                    // Turn off pulse on old lines
-                    const oldPulses = term.querySelectorAll('.animate-pulse');
-                    oldPulses.forEach(el => {
-                        el.classList.remove('animate-pulse');
-                        if (el.innerText === '●') el.innerText = '○';
-                    });
-                    
-                    let highlightClass = payload.status === 'generating' ? 'text-primary' : '';
-                    term.innerHTML += `
-                        <div class="flex items-center gap-2 mt-1 term-line ${highlightClass}">
-                            <span class="animate-pulse">●</span>
-                            <span>${payload.message}</span>
-                        </div>
-                    `;
-                }
-                
-                // Always scroll to bottom
-                term.scrollTop = term.scrollHeight;
-            };
-            
-            eventSource.onerror = function() {
-                eventSource.close();
-                term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span>CONNECTION LOST TO BACKGROUND PIPELINE</span></div>`;
-                submitBtnEl.disabled = false;
-                submitBtnEl.innerHTML = `GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>`;
-            };
-
-        } catch (err) {
-            term.innerHTML += `<div class="flex items-center gap-2 mt-1 text-primary"><span class="font-bold">ERROR:</span> <span>${err.message}</span></div>`;
-            submitBtnEl.disabled = false;
-            submitBtnEl.innerHTML = `GENERATE STORYBOARD <span class="material-symbols-outlined text-3xl"></span>`;
-        }
-    });
-
-    // Rotating Quotes Logic
-    const quotes = [
-        `"A <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">GREAT STORY</span> told badly is still a great story. A great story told visually is <span class="underline decoration-1 underline-offset-8">unforgettable</span>."`,
-        `"Show, <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">DON'T TELL</span>. Let the imagery speak volumes where <span class="underline decoration-1 underline-offset-8">words fall short</span>."`,
-        `"Every great film, product, or movement started as a <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">CLEAR VISION</span>."`,
-        `"Before they build it, they must <span class="underline decoration-1 underline-offset-8">believe it</span>. <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">VISUALS</span> bridge that gap."`,
-        `"Translate your narrative into a <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">CINEMATIC EXPERIENCE</span>, one frame at a time."`,
-        `"The difference between a good pitch and a <span class="underline decoration-1 underline-offset-8">funded pitch</span> is <span class="font-bebas not-italic text-5xl lg:text-6xl text-primary block my-2 tracking-tight">WHAT THEY CAN SEE</span>."`
-    ];
-    let quoteIndex = 0;
-    const quoteEl = document.getElementById('quote-text');
-
-    setInterval(() => {
-        // Fade out
-        quoteEl.classList.remove('opacity-100');
-        quoteEl.classList.add('opacity-0');
-        
-        setTimeout(() => {
-            // Change text and fade back in
-            quoteIndex = (quoteIndex + 1) % quotes.length;
-            quoteEl.innerHTML = quotes[quoteIndex];
-            quoteEl.classList.remove('opacity-0');
-            quoteEl.classList.add('opacity-100');
-        }, 1000); // Wait for CSS transition (1000ms) to complete before swapping text
-    }, 6000); // Swap quote every 6 seconds
-
-    // Dynamic Timecode
-    let frames = 2; // 00:12:44:02 start
-    let seconds = 44;
-    let minutes = 12;
-    let hours = 0;
-    setInterval(() => {
-        frames += 1;
-        if (frames >= 24) { frames = 0; seconds += 1; }
-        if (seconds >= 60) { seconds = 0; minutes += 1; }
-        
-        const pad = (n) => n.toString().padStart(2, '0');
-        const tcStr = `TC: ${pad(hours)}:${pad(minutes)}:${pad(seconds)}:${pad(frames)}`;
-        const tcEl = document.getElementById('tc-counter');
-        if (tcEl) tcEl.innerText = tcStr;
-        
-        // Slight fluctuation to FPS
-        const fpsEl = document.getElementById('fps-counter');
-        if(fpsEl && Math.random() > 0.8) {
-            fpsEl.innerText = (23.970 + Math.random() * 0.010).toFixed(3);
-        }
-    }, 1000 / 24); // 24 FPS
-</script>
-</body>
-</html>
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+{% endblock %}
