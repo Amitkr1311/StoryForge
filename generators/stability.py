@@ -35,7 +35,7 @@ class StabilityGenerator(BaseImageGenerator):
         fields = {
             "prompt": prompt[:10000],
             "output_format": "png",
-            "model": "sd3.5-medium",
+            "model": "sd3.5-flash",
             "aspect_ratio": "16:9",
         }
 
